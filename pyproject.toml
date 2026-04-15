@@ -32,7 +32,7 @@ keywords = ["OAI-PMH", "xml", "archive", "metadata", "harvesting"]
 [project.urls]
 Repository = "https://github.com/eth-library/oaipmh"
 Original-Repository = "https://github.com/infrae/pyoai"
-Changelog = "https://github.com/eth-library/oaipmh/blob/master/CHANGELOG.md"
+Changelog = "https://github.com/eth-library/oaipmh/blob/main/CHANGELOG.md"
 Issues = "https://github.com/eth-library/oaipmh/issues"
 
 [project.optional-dependencies]
