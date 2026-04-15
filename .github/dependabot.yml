@@ -1,0 +1,37 @@
+version: 2
+
+updates:
+  # GitHub Actions: SHA-pinned `uses:` references in workflow files.
+  # Mechanical updates; group them into a single PR per week.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Python dependencies managed by uv (pyproject.toml + uv.lock).
+  # Dependabot's native `uv` ecosystem regenerates `uv.lock` as part of
+  # each PR. Group patch + minor bumps into a single PR; leave majors
+  # ungrouped so each one lands as its own PR for scrutiny.
+  - package-ecosystem: "uv"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+    groups:
+      python-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
