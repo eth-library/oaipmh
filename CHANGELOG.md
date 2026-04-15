@@ -27,6 +27,9 @@ codebase onto modern Python packaging and tooling. The public API and the
   build backend.
 - `uv.lock` for reproducible dependency resolution.
 - [`uv`](https://docs.astral.sh/uv/)-based GitHub Actions CI covering Python 3.10 – 3.13.
+- GitHub Actions workflow (`publish.yml`) for automated PyPI publishing via
+  [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC; no
+  long-lived tokens stored in the repository).
 - Reproducible development environment via a [Nix](https://nixos.org/) flake and
   [`direnv`](https://direnv.net/) integration.
 - `pytest` configuration replacing the legacy `runtests.sh` entry point.
