@@ -42,3 +42,6 @@ testpaths = ["src/oaipmh/tests"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/oaipmh"]
+exclude = [
+    "src/oaipmh/tests",
+]
