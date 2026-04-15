@@ -79,16 +79,15 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/en/
 
 Keep commits atomic: one logical change per commit, with a clear message that explains the *why* rather than restating the diff.
 
-## Branch naming
+## Branching strategy
 
-Use a short, purpose-driven prefix that matches the commit type:
+This project follows a [trunk-based development](https://trunkbaseddevelopment.com/) model. All work lands on `main` through short-lived topic branches (typically merged within a few days). Long-lived branches — including release branches — are avoided because they drift from `main`, accumulate merge conflicts, and fragment CI signal.
 
-- `feat/<short-description>`
-- `fix/<short-description>`
-- `docs/<short-description>`
-- `chore/<short-description>`
-- `ci/<short-description>`
-- `release/<version>` for release branches (for example `release/v3.0.0`).
+Use a short, purpose-driven prefix that matches the commit type: `feat/`, `fix/`, `docs/`, `chore/`, `ci/`.
+
+A `release/<version>` branch is only appropriate for exceptional, coordinated releases that cannot land as a single short-lived branch (for example, the initial `release/v3.0.0` that carried the fork takeover from `pyoai` to `oaipmh`). The default path for a release is a tag on `main`, not a release branch.
+
+The [Releases](#releases) section below picks up from here and walks through the tag-and-publish flow.
 
 ## Pull requests
 
@@ -106,7 +105,7 @@ Releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The release process is:
 
-1. Merge all release-bound changes into `main` through pull requests.
+1. Merge release-bound changes into `main` as individual short-lived topic branches. Do not open a long-lived release branch; cut the release from `main` once the desired commits have landed.
 2. Tag the merge commit with `vX.Y.Z` and push the tag.
 3. Create a draft GitHub Release against the tag, using the relevant `CHANGELOG.md` section as the release notes.
 4. Review the draft release; when publishing it, the `publish.yml` workflow uploads the distribution to PyPI through [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC — no tokens stored in the repository).
