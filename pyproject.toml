@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "oaipmh"
-version = "2.6.0"
+version = "3.0.0"
 description = "Python implementation of the Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH)"
 requires-python = ">=3.10"
 license = "BSD-3-Clause"
