@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.1] — 2026-04-15
+
+### Fixed
+
+- Embed `README.md` as the project's long description on PyPI. The PEP 621
+  `readme` field was missing from `pyproject.toml`, so the `oaipmh 3.0.0`
+  page on PyPI showed an empty body. No code or API changes; this is a
+  packaging-metadata-only fix.
+
 ## [3.0.0] — 2026-04-15
 
 First release under the `oaipmh` distribution name on PyPI. This release marks the
