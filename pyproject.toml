@@ -13,6 +13,7 @@ authors = [
 ]
 maintainers = [
     { name = "Jaime Cardozo", email = "jaime.cardozo@library.ethz.ch" },
+    { name = "ETH Library — Data Science and Research Support", email = "dsr@library.ethz.ch" },
 ]
 dependencies = ["lxml"]
 classifiers = [
