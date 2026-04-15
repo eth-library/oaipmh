@@ -45,3 +45,16 @@ packages = ["src/oaipmh"]
 exclude = [
     "src/oaipmh/tests",
 ]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/oaipmh",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+]
+exclude = [
+    "src/oaipmh/tests",
+]
