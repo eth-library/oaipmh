@@ -56,7 +56,7 @@ Maintenance since the fork has focused on bringing the codebase onto current Pyt
 - Modern packaging using [PEP 621](https://peps.python.org/pep-0621/) metadata and the [Hatchling](https://hatch.pypa.io/) build backend.
 - CI pipeline rebuilt on [`uv`](https://docs.astral.sh/uv/), replacing the legacy `tox` configuration.
 - Reproducible development environment via a [Nix](https://nixos.org/) flake and [direnv](https://direnv.net/).
-- Test suite modernised and running green across Python 3.10 – 3.13.
+- Test suite modernised and running green across Python 3.10 – 3.14.
 
 ## Scope
 
