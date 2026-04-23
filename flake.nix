@@ -19,7 +19,7 @@
       devShells = forAllSystems (pkgs: {
         default = pkgs.mkShell {
           packages = [
-            pkgs.python312
+            pkgs.python314
             pkgs.uv
           ];
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
