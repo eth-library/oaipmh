@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] — 2026-04-23
+
 ### Added
 
-- Python 3.14 support: added to the CI matrix and to the `pyproject.toml`
-  trove classifiers.
+- Python 3.14 support. Added to the `pyproject.toml` trove classifiers and
+  to the CI matrix; the test suite runs green on CPython 3.10 – 3.14.
+
+### Security
+
+- GitHub Actions in `ci.yml` and `publish.yml` pinned to full commit SHAs
+  instead of mutable tags.
 
 ## [3.0.1] — 2026-04-15
 
