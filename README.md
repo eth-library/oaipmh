@@ -51,12 +51,12 @@ No application code changes are required beyond the dependency rename. See [Why 
 
 Maintenance since the fork has focused on bringing the codebase onto current Python infrastructure while preserving behaviour for existing consumers:
 
-- Python 3.10+ baseline; legacy Python 2 compatibility code removed.
+- Supported on Python 3.10 through 3.14; legacy Python 2 shims removed.
 - Deprecated `datetime.utcnow()` replaced with timezone-aware alternatives.
 - Modern packaging using [PEP 621](https://peps.python.org/pep-0621/) metadata and the [Hatchling](https://hatch.pypa.io/) build backend.
 - CI pipeline rebuilt on [`uv`](https://docs.astral.sh/uv/), replacing the legacy `tox` configuration.
 - Reproducible development environment via a [Nix](https://nixos.org/) flake and [direnv](https://direnv.net/).
-- Test suite modernised and running green across Python 3.10 – 3.14.
+- Modernised test suite with CI coverage across the full supported Python range.
 
 ## Scope
 
