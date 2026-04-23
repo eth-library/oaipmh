@@ -16,16 +16,23 @@
       forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
     in
     {
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          packages = [
-            pkgs.python314
-            pkgs.uv
-          ];
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
-            pkgs.stdenv.cc.cc.lib
-          ];
-        };
-      });
+      devShells = forAllSystems (pkgs:
+        let
+          python = pkgs.python314;
+        in
+        {
+          default = pkgs.mkShell {
+            packages = [
+              python
+              pkgs.uv
+            ];
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+              pkgs.stdenv.cc.cc.lib
+            ];
+            UV_PYTHON = "${python}/bin/python3";
+            UV_PYTHON_DOWNLOADS = "never";
+            UV_PYTHON_PREFERENCE = "only-system";
+          };
+        });
     };
 }
