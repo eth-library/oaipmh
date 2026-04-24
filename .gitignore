@@ -6,3 +6,4 @@ build/
 .venv/
 .direnv/
 .pytest_cache/
+.idea/
