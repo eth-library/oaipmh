@@ -7,7 +7,7 @@ from datetime import datetime
 import urllib.request as urllib2
 URLOPEN_PATH = 'urllib.request.urlopen'
 
-from oaipmh import common, metadata, validation, client
+from oaipmh import metadata, validation, client
 
 directory = os.path.dirname(__file__)
 fake1 = os.path.join(directory, 'fake1')

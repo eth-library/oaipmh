@@ -1,7 +1,7 @@
 import unittest
 import os
 from io import BytesIO
-from oaipmh import server, client, common, metadata, error
+from oaipmh import server, client, metadata, error
 from lxml import etree
 from datetime import datetime
 from . import fakeclient

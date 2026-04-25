@@ -1,6 +1,5 @@
 from oaipmh import common, error
 from datetime import datetime
-import random
 
 class FakeServerCommon(object):
     def identify(self):
