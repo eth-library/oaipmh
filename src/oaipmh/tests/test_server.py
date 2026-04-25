@@ -218,7 +218,7 @@ class ClientServerTestCase(unittest.TestCase):
         result = []
         for metadata in metadatas:
             result.append(metadata.getField('title')[0])
-        expected = ['Title %s' % i for i in range(100)]
+        expected = ['Title {}'.format(i) for i in range(100)]
         self.assertEqual(expected, result)
         #for record in records:
         #    print record[0].datestamp()

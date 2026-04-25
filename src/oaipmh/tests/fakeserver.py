@@ -17,7 +17,7 @@ class FakeServerCommon:
         try:
             return self._data[int(identifier)]
         except IndexError:
-            raise error.IdDoesNotExistError("Id does not exist: %s" % identifier)
+            raise error.IdDoesNotExistError("Id does not exist: {}".format(identifier))
 
 class FakeServerBase(FakeServerCommon):
     
@@ -75,7 +75,7 @@ def createFakeData():
         fake_element = None
         datestamp = datetime(year, month, day, hour, minute, second)
         data.append((common.Header(fake_element, str(i), datestamp, '', False),
-                     common.Metadata(fake_element, {'title': ['Title %s' % i]}),
+                     common.Metadata(fake_element, {'title': ['Title {}'.format(i)]}),
                      None))
     return data
     
@@ -100,7 +100,7 @@ class FakeServerWithDeletions(FakeServerBase):
             datestamp = datetime(year, month, day, 12, 30, 0)
             fake_element = None
             data.append((common.Header(fake_element, str(i), datestamp, '', False),
-                         common.Metadata(fake_element, {'title': ['Title %s' % i]}),
+                         common.Metadata(fake_element, {'title': ['Title {}'.format(i)]}),
                          None))
         self._data = data
         
