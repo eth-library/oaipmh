@@ -1,7 +1,7 @@
 from oaipmh import common, error
 from datetime import datetime
 
-class FakeServerCommon(object):
+class FakeServerCommon:
     def identify(self):
         return common.Identify(
             repositoryName='Fake',
