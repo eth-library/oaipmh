@@ -99,7 +99,7 @@ class ClientTestCase(TestCase):
         # exception behavior of the fake server. We do verify whether
         # from or from_ doesn't appear in the request args though
         try:
-            headers = fakeclient.listIdentifiers(from_=None,
+            headers = fakeclient.listIdentifiers(from_=None,  # noqa: F841  # binding documents the call shape; test exercises the KeyError path
                                                  metadataPrefix='oai_dc')
         except KeyError as e:
             self.assertEqual('metadataPrefix=oai_dc&verb=ListIdentifiers',
