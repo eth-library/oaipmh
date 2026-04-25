@@ -9,11 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Exception-chaining cleanup in `client.py`, `server.py`, and
-  `datestamp.py`: re-raised exceptions now use `raise ... from` to
-  preserve the original cause, so tracebacks show `__cause__` rather
-  than the implicit `__context__`. Behaviour is unchanged for code
-  that doesn't introspect exception chains.
+- Chain re-raised exceptions with `raise ... from` in `client.py`,
+  `server.py`, and `datestamp.py` so tracebacks show the original cause
+  ([Ruff `B904`](https://docs.astral.sh/ruff/rules/raise-without-from-inside-except/) /
+  [PEP 3134](https://peps.python.org/pep-3134/)).
 
 ## [3.1.0] — 2026-04-23
 
