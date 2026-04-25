@@ -367,7 +367,7 @@ class DeletionTestCase(unittest.TestCase):
         records = list(records)
         self.assertEqual(12, len(records))
         deleted_count = 0
-        for header, metadata, about in records:
+        for header, metadata, about in records:  # noqa: B007  # placeholder var in fixed-shape tuple unpack
             if header.isDeleted():
                 deleted_count += 1
                 self.assertEqual(None, metadata)

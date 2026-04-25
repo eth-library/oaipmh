@@ -26,7 +26,7 @@ class FakeServerBase(FakeServerCommon):
     def listIdentifiers(self, metadataPrefix=None, from_=None, until=None,
                         set=None):
         result = []
-        for header, metadata, about in self._data:
+        for header, metadata, about in self._data:  # noqa: B007  # placeholder vars in fixed-shape tuple unpack
             if datestampInRange(header, from_, until):
                 result.append(header)
         return result
@@ -44,7 +44,7 @@ class BatchingFakeServerBase(FakeServerCommon):
     def listIdentifiers(self, metadataPrefix=None, from_=None, until=None,
                         set=None, cursor=0, batch_size=10):
         result = []
-        for header, metadata, about in self._data:
+        for header, metadata, about in self._data:  # noqa: B007  # placeholder vars in fixed-shape tuple unpack
             if datestampInRange(header, from_, until):
                 result.append(header)
         return result[cursor:cursor + batch_size]
