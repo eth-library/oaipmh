@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Exception-chaining cleanup in `client.py`, `server.py`, and
+  `datestamp.py`: re-raised exceptions now use `raise ... from` to
+  preserve the original cause, so tracebacks show `__cause__` rather
+  than the implicit `__context__`. Behaviour is unchanged for code
+  that doesn't introspect exception chains.
+
 ## [3.1.0] — 2026-04-23
 
 ### Added
