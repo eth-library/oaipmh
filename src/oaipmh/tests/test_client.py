@@ -7,7 +7,7 @@ from .fakeclient import FakeClient, FakeRequestError, GranularityFakeClient
 
 URLOPEN_PATH = 'urllib.request.urlopen'
 
-from oaipmh import client, metadata, validation
+from oaipmh import client, metadata, validation  # noqa: E402  # late import sequenced after URLOPEN_PATH module-level constant
 
 directory = os.path.dirname(__file__)
 fake1 = os.path.join(directory, 'fake1')
