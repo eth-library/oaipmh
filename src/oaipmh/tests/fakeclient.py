@@ -16,9 +16,11 @@ class FakeClient(client.BaseClient):
         # sort it to get stable behavior
         return self._mapping[getRequestKey(kw)]
 
+
 class FakeRequestError(Exception):
     def __init__(self, kw):
         self.kw = kw
+
 
 class GranularityFakeClient(client.BaseClient):
     def __init__(self, granularity):
@@ -33,19 +35,26 @@ class GranularityFakeClient(client.BaseClient):
 
     def identify(self):
         return common.Identify(
-            'Foo', 'http://test.info', '2.0', ['foo@bar.com'],
-            datetime(2005, 1, 1), 'no', self._granularity,
-            None)
+            "Foo",
+            "http://test.info",
+            "2.0",
+            ["foo@bar.com"],
+            datetime(2005, 1, 1),
+            "no",
+            self._granularity,
+            None,
+        )
+
 
 def getRequestKey(kw):
-    """Create stable key for request dictionary to use in file.
-    """
+    """Create stable key for request dictionary to use in file."""
     items = list(kw.items())
     items.sort()
     return urlencode(items)
 
+
 def createMapping(mapping_path):
-    f = open(os.path.join(mapping_path, 'mapping.txt'))  # noqa: SIM115  # explicit close at end of fixture-loader scope; context-manager refactor deferred
+    f = open(os.path.join(mapping_path, "mapping.txt"))  # noqa: SIM115  # explicit close at end of fixture-loader scope; context-manager refactor deferred
     result = {}
     while 1:
         request = f.readline()
@@ -60,6 +69,7 @@ def createMapping(mapping_path):
         result[request] = text
     return result
 
+
 class FakeCreaterClient(client.Client):
     def __init__(self, base_url, mapping_path, metadata_registry):
         client.Client.__init__(self, base_url, metadata_registry)
@@ -73,15 +83,15 @@ class FakeCreaterClient(client.Client):
 
     def save(self):
         mapping_path = self._mapping_path
-        f = open(os.path.join(mapping_path, 'mapping.txt'), 'w')  # noqa: SIM115  # explicit close at end of save(); context-manager refactor deferred
+        f = open(os.path.join(mapping_path, "mapping.txt"), "w")  # noqa: SIM115  # explicit close at end of save(); context-manager refactor deferred
         i = 0
         for request, response in self._mapping.items():
             f.write(request)
-            f.write('\n')
+            f.write("\n")
             filename = str(i).zfill(5) + ".xml"
             f.write(filename)
-            f.write('\n')
-            response_f = open(os.path.join(mapping_path, filename), 'w')  # noqa: SIM115  # explicit close inside loop; context-manager refactor deferred
+            f.write("\n")
+            response_f = open(os.path.join(mapping_path, filename), "w")  # noqa: SIM115  # explicit close inside loop; context-manager refactor deferred
             response_f.write(response)
             response_f.close()
             i += 1  # noqa: SIM113  # manual counter consumed mid-body for filename; enumerate refactor deferred to a separate test-code slug

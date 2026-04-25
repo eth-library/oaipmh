@@ -4,7 +4,7 @@ from importlib.metadata import version as _get_version
 class Header:
     def __init__(self, element, identifier, datestamp, setspec, deleted):
         self._element = element
-        # force identifier to be a string, it might be 
+        # force identifier to be a string, it might be
         # an lxml.etree._ElementStringResult...
         self._identifier = str(identifier)
         self._datestamp = datestamp
@@ -26,6 +26,7 @@ class Header:
     def isDeleted(self):
         return self._deleted
 
+
 class Metadata:
     def __init__(self, element, map):
         self._element = element
@@ -42,10 +43,20 @@ class Metadata:
 
     __getitem__ = getField
 
+
 class Identify:
-    def __init__(self, repositoryName, baseURL, protocolVersion, adminEmails,
-                 earliestDatestamp, deletedRecord, granularity, compression,
-                 toolkit_description=True):
+    def __init__(
+        self,
+        repositoryName,
+        baseURL,
+        protocolVersion,
+        adminEmails,
+        earliestDatestamp,
+        deletedRecord,
+        granularity,
+        compression,
+        toolkit_description=True,
+    ):
         self._repositoryName = repositoryName
         self._baseURL = baseURL
         self._protocolVersion = protocolVersion
@@ -55,23 +66,24 @@ class Identify:
         self._granularity = granularity
         self._compression = compression
         self._descriptions = []
-        
+
         if toolkit_description:
             try:
-                version = '<version>{}</version>'.format(_get_version('oaipmh'))
+                version = "<version>{}</version>".format(_get_version("oaipmh"))
             except Exception:
-                version = ''
+                version = ""
             self.add_description(
-                '<toolkit xsi:schemaLocation='
+                "<toolkit xsi:schemaLocation="
                 '"http://oai.dlib.vt.edu/OAI/metadata/toolkit '
                 'http://oai.dlib.vt.edu/OAI/metadata/toolkit.xsd" '
                 'xmlns="http://oai.dlib.vt.edu/OAI/metadata/toolkit" '
                 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-                '<title>oaipmh</title>'
-                '{}'
-                '<URL>https://github.com/eth-library/oaipmh</URL>'
-                '</toolkit>'.format(version))
-        
+                "<title>oaipmh</title>"
+                "{}"
+                "<URL>https://github.com/eth-library/oaipmh</URL>"
+                "</toolkit>".format(version)
+            )
+
     def repositoryName(self):
         return self._repositoryName
 
@@ -101,64 +113,72 @@ class Identify:
 
     def descriptions(self):
         return self._descriptions
-    
+
+
 def ResumptionTokenSpec(dict):
     dict = dict.copy()
-    dict['resumptionToken'] = 'exclusive'
+    dict["resumptionToken"] = "exclusive"
     return dict
+
 
 class OAIMethodImpl:
     def __init__(self, verb):
         self._verb = verb
-        
+
     def __call__(self, bound_self, **kw):
         return bound_self.handleVerb(self._verb, kw)
-        
+
+
 def OAIMethod(verb):
     obj = OAIMethodImpl(verb)
+
     def method(self, **kw):
         return obj(self, **kw)
+
     return method
+
 
 class OAIPMH:
     """Mixin that implements the Python-level OAI-PMH interface.
 
     It does not include resumptionToken handling.
-    
+
     It passes the calls on to the 'handleVerb' method, which should be
     overridden in a subclass.
     """
+
     def handleVerb(self, verb, kw):
         raise NotImplementedError
-    
+
     getRecord = OAIMethod(
-        'GetRecord',
-        )
+        "GetRecord",
+    )
 
     getMetadata = OAIMethod(
-        'GetMetadata',
-        )
-    
+        "GetMetadata",
+    )
+
     identify = OAIMethod(
-        'Identify',
-        )
+        "Identify",
+    )
 
     listIdentifiers = OAIMethod(
-        'ListIdentifiers',
-        )
+        "ListIdentifiers",
+    )
 
     listMetadataFormats = OAIMethod(
-        'ListMetadataFormats',
-        )
+        "ListMetadataFormats",
+    )
 
     listRecords = OAIMethod(
-        'ListRecords',
-        )
+        "ListRecords",
+    )
 
     listSets = OAIMethod(
-        'ListSets',
-        )
-    
+        "ListSets",
+    )
+
+
 class ResumptionOAIPMH:
     """Mixin that implements the Resumption-capable OAI-PMH interface.
 
@@ -172,35 +192,35 @@ class ResumptionOAIPMH:
 
     def handleVerb(self, verb, kw):
         raise NotImplementedError
-    
+
     getRecord = OAIMethod(
-        'GetRecord',
-        )
+        "GetRecord",
+    )
 
     getMetadata = OAIMethod(
-        'GetMetadata',
-        )
+        "GetMetadata",
+    )
 
     identify = OAIMethod(
-        'Identify',
-        )
+        "Identify",
+    )
 
     listIdentifiers = OAIMethod(
-        'ListIdentifiers',
-        )
+        "ListIdentifiers",
+    )
 
     listMetadataFormats = OAIMethod(
-        'ListMetadataFormats',
-        )
+        "ListMetadataFormats",
+    )
 
     listRecords = OAIMethod(
-        'ListRecords',
-        )
+        "ListRecords",
+    )
 
     listSets = OAIMethod(
-        'ListSets',
-        )
+        "ListSets",
+    )
+
 
 def getMethodForVerb(server, verb):
     return getattr(server, verb[0].lower() + verb[1:])
-

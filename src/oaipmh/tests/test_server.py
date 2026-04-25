@@ -11,59 +11,62 @@ from . import fakeclient, fakeserver
 
 NS_OAIPMH = server.NS_OAIPMH
 
+
 def fileInTestDir(name):
     _testdir = os.path.split(__file__)[0]
     return os.path.join(_testdir, name)
 
+
 # load up schema
-oaischema = etree.XMLSchema(etree.parse(fileInTestDir('OAI-PMH.xsd')))
+oaischema = etree.XMLSchema(etree.parse(fileInTestDir("OAI-PMH.xsd")))
+
 
 def etree_parse(xml):
     return etree.parse(BytesIO(xml))
 
+
 class XMLTreeServerTestCase(unittest.TestCase):
-    
     def setUp(self):
         self._server = self.getXMLTreeServer()
 
     def getXMLTreeServer(self):
         directory = os.path.dirname(__file__)
-        fake1 = os.path.join(directory, 'fake1')
+        fake1 = os.path.join(directory, "fake1")
         myserver = fakeclient.FakeClient(fake1)
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
-        return server.XMLTreeServer(server.Resumption(myserver),
-                                    metadata_registry)
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
+        return server.XMLTreeServer(server.Resumption(myserver), metadata_registry)
 
     def test_getRecord(self):
         tree = self._server.getRecord(
-            metadataPrefix='oai_dc', identifier='hdl:1765/315')
+            metadataPrefix="oai_dc", identifier="hdl:1765/315"
+        )
         self.assertTrue(oaischema.validate(tree))
 
     def test_getMetadata(self):
         tree = self._server.getMetadata(
-            metadataPrefix='oai_dc', identifier='hdl:1765/315')
-        self.assertEqual(tree.tag,
-                          '{http://www.openarchives.org/OAI/2.0/oai_dc/}dc')
-        
+            metadataPrefix="oai_dc", identifier="hdl:1765/315"
+        )
+        self.assertEqual(tree.tag, "{http://www.openarchives.org/OAI/2.0/oai_dc/}dc")
+
     def test_identify(self):
         tree = self._server.identify()
         self.assertTrue(oaischema.validate(tree))
 
     def test_listIdentifiers(self):
         tree = self._server.listIdentifiers(
-            from_=datetime(2003, 4, 10),
-            metadataPrefix='oai_dc')
+            from_=datetime(2003, 4, 10), metadataPrefix="oai_dc"
+        )
         self.assertTrue(oaischema.validate(tree))
-        
+
     def test_listMetadataFormats(self):
         tree = self._server.listMetadataFormats()
         self.assertTrue(oaischema.validate(tree))
 
     def test_listRecords(self):
         tree = self._server.listRecords(
-            from_=datetime(2003, 4, 10),
-            metadataPrefix='oai_dc')
+            from_=datetime(2003, 4, 10), metadataPrefix="oai_dc"
+        )
         self.assertTrue(oaischema.validate(tree))
 
     def test_listSets(self):
@@ -79,51 +82,52 @@ class XMLTreeServerTestCase(unittest.TestCase):
         # the metadata element
 
         tree = self._server.getRecord(
-            metadataPrefix='oai_dc', identifier='hdl:1765/315')
+            metadataPrefix="oai_dc", identifier="hdl:1765/315"
+        )
         # ugly xml manipulation, this is probably why the requirement is in
         # the spec (yuck!)
         xml = etree.tostring(tree)
         xml = xml.decode("utf-8")
-        xml = xml.split('<metadata>')[-1].split('</metadata>')[0]
-        first_el = xml.split('>')[0]
-        self.assertTrue(first_el.startswith('<oai_dc:dc'))
+        xml = xml.split("<metadata>")[-1].split("</metadata>")[0]
+        first_el = xml.split(">")[0]
+        self.assertTrue(first_el.startswith("<oai_dc:dc"))
         self.assertTrue(
-            'xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"'
-            in first_el) 
-        self.assertTrue(
-            'xmlns:dc="http://purl.org/dc/elements/1.1/"'
-            in first_el) 
-        
+            'xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"' in first_el
+        )
+        self.assertTrue('xmlns:dc="http://purl.org/dc/elements/1.1/"' in first_el)
+
+
 class ServerTestCase(unittest.TestCase):
     """
     Most of the tests are in the XMLTreeServerTestCase,
     but to test integration with XML directly (argument passing and such),
     a few test cases here.
     """
-    
+
     def setUp(self):
         self._server = self.getServer()
-        
+
     def getServer(self):
         directory = os.path.dirname(__file__)
-        fake1 = os.path.join(directory, 'fake1')
+        fake1 = os.path.join(directory, "fake1")
         myserver = fakeclient.FakeClient(fake1)
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
         return server.Server(myserver, metadata_registry)
 
     def test_identify(self):
         xml = self._server.identify()
         tree = etree_parse(xml)
         self.assertTrue(oaischema.validate(tree))
-        
+
     def test_listIdentifiers(self):
         xml = self._server.listIdentifiers(
-            from_=datetime(2003, 4, 10),
-            metadataPrefix='oai_dc')
+            from_=datetime(2003, 4, 10), metadataPrefix="oai_dc"
+        )
         tree = etree_parse(xml)
         self.assertTrue(oaischema.validate(tree))
-        
+
+
 class ResumptionTestCase(unittest.TestCase):
     def setUp(self):
         self._fakeserver = fakeserver.FakeServer()
@@ -131,26 +135,27 @@ class ResumptionTestCase(unittest.TestCase):
 
     def test_resumption(self):
         headers = []
-        result, token = self._server.listIdentifiers(metadataPrefix='oai_dc')
+        result, token = self._server.listIdentifiers(metadataPrefix="oai_dc")
         headers.extend(result)
         while token is not None:
             result, token = self._server.listIdentifiers(resumptionToken=token)
             headers.extend(result)
-        self.assertEqual([str(i) for i in range(100)],
-                          [header.identifier() for header in headers])
+        self.assertEqual(
+            [str(i) for i in range(100)], [header.identifier() for header in headers]
+        )
 
     def test_tree_resumption(self):
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
-        myserver = server.XMLTreeServer(
-            self._server, metadata_registry)
-        tree = myserver.listIdentifiers(metadataPrefix='oai_dc')
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
+        myserver = server.XMLTreeServer(self._server, metadata_registry)
+        tree = myserver.listIdentifiers(metadataPrefix="oai_dc")
         self.assertTrue(oaischema.validate(tree))
         # we should find a resumptionToken element with text
         self.assertTrue(
-            tree.xpath('//oai:resumptionToken/text()', 
-                       namespaces={'oai': NS_OAIPMH} ))
-        
+            tree.xpath("//oai:resumptionToken/text()", namespaces={"oai": NS_OAIPMH})
+        )
+
+
 class BatchingResumptionTestCase(unittest.TestCase):
     def setUp(self):
         self._fakeserver = fakeserver.BatchingFakeServer()
@@ -158,200 +163,211 @@ class BatchingResumptionTestCase(unittest.TestCase):
 
     def _listIdentifiers(self, resumption_server, expected_length):
         headers = []
-        result, token = resumption_server.listIdentifiers(
-            metadataPrefix='oai_dc')
+        result, token = resumption_server.listIdentifiers(metadataPrefix="oai_dc")
         headers.extend(result)
         self.assertTrue(token is not None)
         while token is not None:
             self.assertTrue(result)
             self.assertEqual(expected_length, len(result))
-            result, token = resumption_server.listIdentifiers(
-                resumptionToken=token)
+            result, token = resumption_server.listIdentifiers(resumptionToken=token)
             headers.extend(result)
-        self.assertEqual([str(i) for i in range(100)],
-                          [header.identifier() for header in headers])
+        self.assertEqual(
+            [str(i) for i in range(100)], [header.identifier() for header in headers]
+        )
 
     def test_resumption(self):
         self._listIdentifiers(self._server, 10)
- 
+
     def test_resumption_nonexact(self):
         myserver = server.BatchingResumption(self._fakeserver, 13)
         self._listIdentifiers(myserver, 13)
 
     def test_resumption_overflow(self):
         myserver = server.BatchingResumption(self._fakeserver, 300)
-        result, token = myserver.listIdentifiers(
-            metadataPrefix='oai_dc')
+        result, token = myserver.listIdentifiers(metadataPrefix="oai_dc")
         self.assertTrue(token is None)
-        self.assertEqual([str(i) for i in range(100)],
-                          [header.identifier() for header in result])
-        
+        self.assertEqual(
+            [str(i) for i in range(100)], [header.identifier() for header in result]
+        )
+
     def test_tree_resumption(self):
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
         myserver = server.XMLTreeServer(self._server, metadata_registry)
-        tree = myserver.listIdentifiers(metadataPrefix='oai_dc')
+        tree = myserver.listIdentifiers(metadataPrefix="oai_dc")
         self.assertTrue(oaischema.validate(tree))
         # we should find a resumptionToken element with text
         self.assertTrue(
-            tree.xpath('//oai:resumptionToken/text()', 
-                       namespaces={'oai': NS_OAIPMH} ))
-        
+            tree.xpath("//oai:resumptionToken/text()", namespaces={"oai": NS_OAIPMH})
+        )
+
+
 class ClientServerTestCase(unittest.TestCase):
     def setUp(self):
         self._fakeserver = fakeserver.FakeServer()
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
-        metadata_registry.registerReader('oai_dc', metadata.oai_dc_reader)
-        self._server = server.Server(self._fakeserver, metadata_registry,
-                                     resumption_batch_size=7)
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
+        metadata_registry.registerReader("oai_dc", metadata.oai_dc_reader)
+        self._server = server.Server(
+            self._fakeserver, metadata_registry, resumption_batch_size=7
+        )
         self._client = client.ServerClient(self._server, metadata_registry)
 
     def test_listIdentifiers(self):
-        headers = self._client.listIdentifiers(metadataPrefix='oai_dc')
-        self.assertEqual([str(i) for i in range(100)],
-                          [header.identifier() for header in headers])
+        headers = self._client.listIdentifiers(metadataPrefix="oai_dc")
+        self.assertEqual(
+            [str(i) for i in range(100)], [header.identifier() for header in headers]
+        )
 
     def test_listRecords(self):
-        records = self._client.listRecords(metadataPrefix='oai_dc')
+        records = self._client.listRecords(metadataPrefix="oai_dc")
         records = list(records)
         self.assertEqual(100, len(records))
         metadatas = [metadata for (header, metadata, about) in records]
         result = []
         for metadata in metadatas:  # noqa: F402  # loop var `metadata` shadows oaipmh.metadata module import
-            result.append(metadata.getField('title')[0])
-        expected = ['Title {}'.format(i) for i in range(100)]
+            result.append(metadata.getField("title")[0])
+        expected = ["Title {}".format(i) for i in range(100)]
         self.assertEqual(expected, result)
-        #for record in records:
+        # for record in records:
         #    print record[0].datestamp()
 
     def test_listIdentifiersFromUntil(self):
-        headers = self._client.listIdentifiers(metadataPrefix='oai_dc',
-                                               from_=datetime(2004, 1, 1),
-                                               until=datetime(2004, 7, 1))
+        headers = self._client.listIdentifiers(
+            metadataPrefix="oai_dc",
+            from_=datetime(2004, 1, 1),
+            until=datetime(2004, 7, 1),
+        )
         # we expect 52 items
         headers = list(headers)
         self.assertEqual(52, len(headers))
 
     def test_listIdentifiersFromUntil_nothing(self):
-        self.assertRaises(error.NoRecordsMatchError,
-                          self._client.listIdentifiers,
-                          metadataPrefix='oai_dc', from_=datetime(2003, 1, 1),
-                          until=datetime(2003, 7, 1))        
-        
-        
+        self.assertRaises(
+            error.NoRecordsMatchError,
+            self._client.listIdentifiers,
+            metadataPrefix="oai_dc",
+            from_=datetime(2003, 1, 1),
+            until=datetime(2003, 7, 1),
+        )
+
+
 class ErrorTestCase(unittest.TestCase):
     def setUp(self):
         self._fakeserver = fakeserver.FakeServer()
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
-        metadata_registry.registerReader('oai_dc', metadata.oai_dc_reader)
-        self._server = server.Server(self._fakeserver, metadata_registry,
-                                     resumption_batch_size=7)
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
+        metadata_registry.registerReader("oai_dc", metadata.oai_dc_reader)
+        self._server = server.Server(
+            self._fakeserver, metadata_registry, resumption_batch_size=7
+        )
 
     def test_badArgument(self):
-        xml = self._server.handleRequest({'verb': 'Identify',
-                                          'foo' : 'Bar'})
-        self.assertErrors([('badArgument', 'Unknown argument: foo')],
-                          xml)
+        xml = self._server.handleRequest({"verb": "Identify", "foo": "Bar"})
+        self.assertErrors([("badArgument", "Unknown argument: foo")], xml)
         # need more tests for different variations (required, etc)
 
     def test_noArgument(self):
         xml = self._server.handleRequest({})
-        self.assertErrors([('badVerb', 'Required verb argument not found.')],
-                          xml)
-        
+        self.assertErrors([("badVerb", "Required verb argument not found.")], xml)
+
     def test_badVerb(self):
-        xml = self._server.handleRequest({'verb': 'Frotz'})
-        self.assertErrors([('badVerb', 'Illegal verb: Frotz')], xml)
+        xml = self._server.handleRequest({"verb": "Frotz"})
+        self.assertErrors([("badVerb", "Illegal verb: Frotz")], xml)
 
     def test_badResumptionToken(self):
-        xml = self._server.handleRequest({'verb': 'ListRecords',
-                                          'resumptionToken': 'foobar'})
+        xml = self._server.handleRequest(
+            {"verb": "ListRecords", "resumptionToken": "foobar"}
+        )
         self.assertErrors(
-            [('badResumptionToken',
-             'Unable to decode resumption token: foobar')], xml)
+            [("badResumptionToken", "Unable to decode resumption token: foobar")], xml
+        )
 
     def test_cannotDisseminateFormat(self):
-        xml = self._server.handleRequest({'verb': 'ListRecords',
-                                          'metadataPrefix': 'nonexistent'})
+        xml = self._server.handleRequest(
+            {"verb": "ListRecords", "metadataPrefix": "nonexistent"}
+        )
         self.assertErrors(
-            [('cannotDisseminateFormat',
-              'Unknown metadata format: nonexistent')],
-            xml)
+            [("cannotDisseminateFormat", "Unknown metadata format: nonexistent")], xml
+        )
 
     def test_idDoesNotExist(self):
-        xml = self._server.handleRequest({'verb': 'GetRecord',
-                                          'metadataPrefix': 'oai_dc',
-                                          'identifier': '500'})
-        self.assertErrors(
-            [('idDoesNotExist',
-              'Id does not exist: 500')],
-            xml)
+        xml = self._server.handleRequest(
+            {"verb": "GetRecord", "metadataPrefix": "oai_dc", "identifier": "500"}
+        )
+        self.assertErrors([("idDoesNotExist", "Id does not exist: 500")], xml)
 
     def test_badDateArgument(self):
-        xml = self._server.handleRequest({'verb': 'ListRecords',
-                                          'metadataPrefix': 'oai_dc',
-                                          'from': 'junk'})
+        xml = self._server.handleRequest(
+            {"verb": "ListRecords", "metadataPrefix": "oai_dc", "from": "junk"}
+        )
         self.assertErrors(
-            [('badArgument',
-              "The value 'junk' of the argument 'from' is not valid.")],
-            xml)
-        xml = self._server.handleRequest({'verb': 'ListRecords',
-                                          'metadataPrefix': 'oai_dc',
-                                          'until': 'junk'})
+            [("badArgument", "The value 'junk' of the argument 'from' is not valid.")],
+            xml,
+        )
+        xml = self._server.handleRequest(
+            {"verb": "ListRecords", "metadataPrefix": "oai_dc", "until": "junk"}
+        )
         self.assertErrors(
-            [('badArgument',
-              "The value 'junk' of the argument 'until' is not valid.")],
-            xml)
-
+            [("badArgument", "The value 'junk' of the argument 'until' is not valid.")],
+            xml,
+        )
 
     def testDifferentGranularities(self):
-        xml = self._server.handleRequest({'verb': 'ListRecords',
-                                          'metadataPrefix': 'oai_dc',
-                                          'from': '2006-01-01',
-                                          'until': '2008-01-01T00:00:00Z'})
+        xml = self._server.handleRequest(
+            {
+                "verb": "ListRecords",
+                "metadataPrefix": "oai_dc",
+                "from": "2006-01-01",
+                "until": "2008-01-01T00:00:00Z",
+            }
+        )
         self.assertErrors(
-            [('badArgument',
-              "The request has different granularities for the from"
-              " and until parameters")],
-            xml)
-        
-    
+            [
+                (
+                    "badArgument",
+                    "The request has different granularities for the from"
+                    " and until parameters",
+                )
+            ],
+            xml,
+        )
+
     def assertErrors(self, errors, xml):
         self.assertEqual(errors, self.findErrors(xml))
-        
+
     def findErrors(self, xml):
         # parse
         tree = etree_parse(xml)
         # validate xml
         self.assertTrue(oaischema.validate(tree))
         result = []
-        for e in tree.xpath(
-            '//oai:error', namespaces={'oai': NS_OAIPMH}):
-            result.append((e.get('code'), e.text))
+        for e in tree.xpath("//oai:error", namespaces={"oai": NS_OAIPMH}):
+            result.append((e.get("code"), e.text))
         result.sort()
         return result
+
 
 class DeletionTestCase(unittest.TestCase):
     def setUp(self):
         self._fakeserver = fakeserver.FakeServerWithDeletions()
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
-        metadata_registry.registerReader('oai_dc', metadata.oai_dc_reader)
-        self._server = server.Server(self._fakeserver, metadata_registry,
-                                     resumption_batch_size=7)
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
+        metadata_registry.registerReader("oai_dc", metadata.oai_dc_reader)
+        self._server = server.Server(
+            self._fakeserver, metadata_registry, resumption_batch_size=7
+        )
         self._client = client.ServerClient(self._server, metadata_registry)
 
     def test_listIdentifiers(self):
-        headers = self._client.listIdentifiers(metadataPrefix='oai_dc')
+        headers = self._client.listIdentifiers(metadataPrefix="oai_dc")
         # we expect 12 items
         headers = list(headers)
         self.assertEqual(12, len(headers))
         # now delete
         self._fakeserver.deletionEvent()
         # check again, we expect 12 items, but half of which is deleted
-        headers = self._client.listIdentifiers(metadataPrefix='oai_dc')
+        headers = self._client.listIdentifiers(metadataPrefix="oai_dc")
         headers = list(headers)
         self.assertEqual(12, len(headers))
         deleted_count = 0
@@ -363,7 +379,7 @@ class DeletionTestCase(unittest.TestCase):
     def test_listRecords(self):
         self._fakeserver.deletionEvent()
         # we expect 12 items, but half of which is deleted
-        records = self._client.listRecords(metadataPrefix='oai_dc')
+        records = self._client.listRecords(metadataPrefix="oai_dc")
         records = list(records)
         self.assertEqual(12, len(records))
         deleted_count = 0
@@ -376,33 +392,31 @@ class DeletionTestCase(unittest.TestCase):
     def test_getRecord(self):
         self._fakeserver.deletionEvent()
         header, metadata, about = self._fakeserver.getRecord(
-            metadataPrefix='oai_dc',
-            identifier='1')
+            metadataPrefix="oai_dc", identifier="1"
+        )
         # we try to access a deleted record
         header, metadata, about = self._client.getRecord(
-            metadataPrefix='oai_dc', identifier='1')
+            metadataPrefix="oai_dc", identifier="1"
+        )
         self.assertTrue(header.isDeleted())
         self.assertEqual(None, metadata)
+
 
 class NsMapTestCase(unittest.TestCase):
     def setUp(self):
         self._fakeserver = fakeserver.FakeServer()
         metadata_registry = metadata.MetadataRegistry()
-        metadata_registry.registerWriter('oai_dc', server.oai_dc_writer)
-        metadata_registry.registerReader('oai_dc', metadata.oai_dc_reader)
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
+        metadata_registry.registerReader("oai_dc", metadata.oai_dc_reader)
         self._xmlserver = server.XMLTreeServer(
-            self._fakeserver,
-            metadata_registry,
-            nsmap={'cow': 'http://www.cow.com'})
+            self._fakeserver, metadata_registry, nsmap={"cow": "http://www.cow.com"}
+        )
         self._server = server.Server(
-            self._fakeserver,
-            metadata_registry,
-            nsmap={'cow': 'http://www.cow.com'})
-        
+            self._fakeserver, metadata_registry, nsmap={"cow": "http://www.cow.com"}
+        )
+
     def test_nsmap(self):
         # if we pass another nsmap along to the server constructor, we
         # can control extra namespaces in the output envelope
         tree = self._xmlserver.identify()
-        self.assertEqual(
-            'http://www.cow.com',
-            tree.getroot().nsmap['cow'])
+        self.assertEqual("http://www.cow.com", tree.getroot().nsmap["cow"])
