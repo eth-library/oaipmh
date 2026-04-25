@@ -1,6 +1,5 @@
 from importlib.metadata import version as _get_version
 
-from oaipmh import error
 
 class Header(object):
     def __init__(self, element, identifier, datestamp, setspec, deleted):

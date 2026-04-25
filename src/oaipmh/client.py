@@ -10,7 +10,6 @@ except ImportError:
     import urllib2
     from urllib import urlencode
 
-import sys
 import base64
 from lxml import etree
 import time
