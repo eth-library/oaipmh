@@ -7,7 +7,7 @@ from .fakeclient import FakeClient, FakeRequestError, GranularityFakeClient
 
 URLOPEN_PATH = "urllib.request.urlopen"
 
-from oaipmh import client, metadata, validation  # noqa: E402  # late import sequenced after URLOPEN_PATH module-level constant
+from oaipmh import client, metadata, validation  # noqa: E402, I001  # late import sequenced after URLOPEN_PATH module-level constant; out-of-order is the whole point
 
 directory = os.path.dirname(__file__)
 fake1 = os.path.join(directory, "fake1")
@@ -77,8 +77,8 @@ class ClientTestCase(TestCase):
         # exception behavior of the fake server. We do verify whether
         # from or from_ doesn't appear in the request args though
         try:
-            headers = fakeclient.listIdentifiers(
-                from_=None,  # noqa: F841  # binding documents the call shape; test exercises the KeyError path
+            headers = fakeclient.listIdentifiers(  # noqa: F841  # binding documents the call shape; test exercises the KeyError path
+                from_=None,
                 metadataPrefix="oai_dc",
             )
         except KeyError as e:

@@ -393,8 +393,11 @@ def ResumptionListGenerator(firstBatch, nextBatch):
 
 
 def retrieveFromUrlWaiting(
-    request, wait_max=WAIT_MAX, wait_default=WAIT_DEFAULT, expected_errcodes={503}
-):  # noqa: B006 — public API; mutating the default would be a caller bug, deferred to Phase B
+    request,
+    wait_max=WAIT_MAX,
+    wait_default=WAIT_DEFAULT,
+    expected_errcodes={503},  # noqa: B006  # public API; mutating the default would be a caller bug, behaviour-preserving fix deferred
+):
     """Get text from URL, handling 503 Retry-After."""
     for _i in list(range(wait_max)):
         try:
