@@ -12,7 +12,11 @@ except ImportError:
 import sys
 
 from oaipmh import common, metadata, validation, error
-from oaipmh.datestamp import datestamp_to_datetime, datetime_to_datestamp, DatestampError
+from oaipmh.datestamp import (
+    DatestampError,
+    datestamp_to_datetime,
+    datetime_to_datestamp,
+)
 
 NS_OAIPMH = 'http://www.openarchives.org/OAI/2.0/'
 NS_XSI = 'http://www.w3.org/2001/XMLSchema-instance'
