@@ -84,5 +84,5 @@ class FakeCreaterClient(client.Client):
             response_f = open(os.path.join(mapping_path, filename), 'w')
             response_f.write(response)
             response_f.close()
-            i += 1
+            i += 1  # noqa: SIM113  # manual counter consumed mid-body for filename; enumerate refactor deferred to a separate test-code slug
         f.close()
