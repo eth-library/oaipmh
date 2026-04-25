@@ -347,7 +347,7 @@ class Server(ServerBase):
     """
     def __init__(self, server, metadata_registry=None, nsmap=None,
                  resumption_batch_size=10):
-        super(Server, self).__init__(
+        super().__init__(
             Resumption(server, resumption_batch_size),
             metadata_registry,
             nsmap)
@@ -357,7 +357,7 @@ class BatchingServer(ServerBase):
     """
     def __init__(self, server, metadata_registry=None, nsmap=None,
                  resumption_batch_size=10):
-        super(BatchingServer, self).__init__(
+        super().__init__(
             BatchingResumption(server, resumption_batch_size),
             metadata_registry,
             nsmap)
