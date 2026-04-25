@@ -1,0 +1,24 @@
+# Hooks run locally via `pre-commit install` and in CI's `lint` job.
+# SHA-pinned; bump via `pre-commit autoupdate` then re-pin.
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 6fec9b7edb08fd9989088709d864a7826dc74e80  # v0.15.12
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # v6.0.0
+    hooks:
+      # Skip files where whitespace is content (README Markdown line breaks,
+      # XML/XSD test fixtures) or where bulk whitespace changes are reserved
+      # for a separate commit recorded in `.git-blame-ignore-revs`.
+      - id: trailing-whitespace
+        exclude: ^(README\.md|src/oaipmh/.*\.py|src/oaipmh/tests/.*\.(xml|xsd))$
+      - id: end-of-file-fixer
+        exclude: ^(src/oaipmh/.*\.py|src/oaipmh/tests/.*\.(xml|xsd))$
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files

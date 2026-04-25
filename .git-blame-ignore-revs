@@ -1,0 +1,19 @@
+# Commit SHAs whose changes should be ignored by `git blame`.
+#
+# These are typically bulk reformat or rename passes that shift every line
+# without changing program behaviour. Including them here keeps blame output
+# focused on the commits that actually authored each line.
+#
+# Convention: one full-length commit SHA per line. An optional `# comment`
+# trailer is allowed for context (the commit subject, e.g. the PR number, or
+# the rule that drove the rewrite).
+#
+# Configure git to consult this file by default:
+#
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# (or pass `--ignore-revs-file=.git-blame-ignore-revs` ad-hoc).
+#
+# Phase A of the Ruff + pre-commit adoption deliberately does not run
+# `ruff format`; Phase B will append the bulk-reformat merge-commit SHA
+# below.
