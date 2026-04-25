@@ -1,12 +1,9 @@
 # Commit SHAs whose changes should be ignored by `git blame`.
 #
-# These are typically bulk reformat or rename passes that shift every line
-# without changing program behaviour. Including them here keeps blame output
-# focused on the commits that actually authored each line.
-#
-# Convention: one full-length commit SHA per line. An optional `# comment`
-# trailer is allowed for context (the commit subject, e.g. the PR number, or
-# the rule that drove the rewrite).
+# These are bulk reformat or mechanical rewrite passes that shift every line
+# without changing program behaviour. Listing them here keeps `git blame`
+# output focused on the commits that actually authored each line, rather
+# than attributing the line to whoever last ran the formatter.
 #
 # Configure git to consult this file by default:
 #
@@ -14,9 +11,21 @@
 #
 # (or pass `--ignore-revs-file=.git-blame-ignore-revs` ad-hoc).
 #
-# Phase A of the Ruff + pre-commit adoption deliberately does not run
-# `ruff format`; Phase B will append the bulk-reformat merge-commit SHA
-# below.
+# Convention: one full-length commit SHA per line. An optional `# comment`
+# trailer is allowed for context (typically the date and the commit subject
+# or the lint rule that drove the rewrite).
+#
+# Commits that belong here in this repo:
+#
+#   * Repo-wide `ruff format` passes.
+#   * Repo-wide `ruff check --fix` mechanical sweeps that touch many files
+#     for a single rule (import sorting, unused-import removal, syntax
+#     modernisation, and similar).
+#   * Follow-up hygiene commits that re-attach `# noqa` annotations or
+#     similar trailing markers displaced by a format reflow.
+#
+# Behaviour-changing commits do not belong here, even if they touch many
+# files.
 
 e9ba5767949220f002b544b03820f39a3f69ff27  # 2026-04-25 style: drop redundant (object) base class (UP004)
 51279b711a40fcd829fa58f6bc01bb2d2e167f92  # 2026-04-25 style: collapse super(Cls, self) to super() (UP008)
