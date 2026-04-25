@@ -58,7 +58,7 @@ class Identify:
         
         if toolkit_description:
             try:
-                version = '<version>%s</version>' % _get_version('oaipmh')
+                version = '<version>{}</version>'.format(_get_version('oaipmh'))
             except Exception:
                 version = ''
             self.add_description(
@@ -68,9 +68,9 @@ class Identify:
                 'xmlns="http://oai.dlib.vt.edu/OAI/metadata/toolkit" '
                 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
                 '<title>oaipmh</title>'
-                '%s'
+                '{}'
                 '<URL>https://github.com/eth-library/oaipmh</URL>'
-                '</toolkit>' % version)
+                '</toolkit>'.format(version))
         
     def repositoryName(self):
         return self._repositoryName

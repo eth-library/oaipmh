@@ -172,7 +172,7 @@ class XMLTreeServer:
     
     def _outputBasicEnvelope(self, **kw):
         e_oaipmh = Element(nsoai('OAI-PMH'), nsmap=self._nsmap)
-        e_oaipmh.set('{%s}schemaLocation' % NS_XSI,
+        e_oaipmh.set('{{{}}}schemaLocation'.format(NS_XSI),
                      ('http://www.openarchives.org/OAI/2.0/ '
                       'http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd'))
         e_tree = ElementTree(element=e_oaipmh)
@@ -244,7 +244,7 @@ class XMLTreeServer:
         e_metadata = SubElement(element, nsoai('metadata'))
         if not self._metadata_registry.hasWriter(metadata_prefix):
             raise error.CannotDisseminateFormatError(
-                  "Unknown metadata format: %s" % metadata_prefix)
+                  "Unknown metadata format: {}".format(metadata_prefix))
         self._metadata_registry.writeMetadata(
             metadata_prefix, e_metadata, metadata)
 
@@ -281,7 +281,7 @@ class ServerBase(common.ResumptionOAIPMH):
             if verb not in ['GetRecord', 'Identify', 'ListIdentifiers',
                             'GetMetadata', 'ListMetadataFormats',
                             'ListRecords', 'ListSets']:
-                raise error.BadVerbError("Illegal verb: %s" % verb)
+                raise error.BadVerbError("Illegal verb: {}".format(verb))
             # replace from and until arguments if necessary
             from_ = request_kw.get('from')
             if from_ is not None:
@@ -290,8 +290,8 @@ class ServerBase(common.ResumptionOAIPMH):
                     request_kw['from_'] = datestamp_to_datetime(from_)
                 except DatestampError as err:
                     raise error.BadArgumentError(
-                        "The value '%s' of the argument "
-                        "'%s' is not valid." %(from_, 'from')) from err
+                        "The value '{}' of the argument "
+                        "'{}' is not valid.".format(from_, 'from')) from err
                 del request_kw['from']
             until = request_kw.get('until')
             if until is not None:
@@ -300,8 +300,8 @@ class ServerBase(common.ResumptionOAIPMH):
                                                                 inclusive=True)
                 except DatestampError as err:
                     raise error.BadArgumentError(
-                        "The value '%s' of the argument "
-                        "'%s' is not valid." %(until, 'until')) from err
+                        "The value '{}' of the argument "
+                        "'{}' is not valid.".format(until, 'until')) from err
 
             if (
                 from_ is not None
@@ -471,7 +471,7 @@ def decodeResumptionToken(token):
         kw = parse_qs(token, True, True)
     except ValueError as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token: %s" % token) from err
+              "Unable to decode resumption token: {}".format(token)) from err
     result = {}
     for key, value in kw.items():
         value = value[0]
@@ -482,7 +482,7 @@ def decodeResumptionToken(token):
         cursor = int(result.pop('cursor'))
     except (KeyError, ValueError) as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token (bad cursor): %s" % token) from err
+              "Unable to decode resumption token (bad cursor): {}".format(token)) from err
     # XXX should also validate result contents. Need verb information
     # for this, and somewhat more flexible verb validation support
     return result, cursor
@@ -490,8 +490,8 @@ def decodeResumptionToken(token):
 def oai_dc_writer(element, metadata):
     e_dc = SubElement(element, nsoaidc('dc'),
                       nsmap={'oai_dc': NS_OAIDC, 'dc': NS_DC, 'xsi': NS_XSI})
-    e_dc.set('{%s}schemaLocation' % NS_XSI,
-             '%s http://www.openarchives.org/OAI/2.0/oai_dc.xsd' % NS_DC)
+    e_dc.set('{{{}}}schemaLocation'.format(NS_XSI),
+             '{} http://www.openarchives.org/OAI/2.0/oai_dc.xsd'.format(NS_DC))
     map = metadata.getMap()
     for name in [
         'title', 'creator', 'subject', 'description', 'publisher',
@@ -502,10 +502,10 @@ def oai_dc_writer(element, metadata):
             e.text = value
                
 def nsoai(name):
-    return '{%s}%s' % (NS_OAIPMH, name)
+    return '{{{}}}{}'.format(NS_OAIPMH, name)
 
 def nsoaidc(name):
-    return '{%s}%s' % (NS_OAIDC, name)
+    return '{{{}}}{}'.format(NS_OAIDC, name)
 
 def nsdc(name):
-    return '{%s}%s' % (NS_DC, name)
+    return '{{{}}}{}'.format(NS_DC, name)

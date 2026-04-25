@@ -57,5 +57,5 @@ class DatestampError(ClientError):
         self.datestamp = datestamp
 
     def details(self):
-        return ("An illegal datestamp was encountered: %s" % self.datestamp)
+        return ("An illegal datestamp was encountered: {}".format(self.datestamp))
     

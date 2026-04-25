@@ -56,7 +56,7 @@ class BaseClient(common.OAIPMH):
         elif granularity == 'YYYY-MM-DDThh:mm:ssZ':
             self._day_granularity= False
         else:
-            raise Error("Non-standard granularity on server: %s" % granularity)
+            raise Error("Non-standard granularity on server: {}".format(granularity))
 
     def handleVerb(self, verb, kw):
         # validate kw first
@@ -311,7 +311,7 @@ class BaseClient(common.OAIPMH):
                                 'idDoesNotExist', 'noRecordsMatch',
                                 'noMetadataFormats', 'noSetHierarchy']:
                     raise error.UnknownError(
-                          "Unknown error code from server: %s, message: %s" % (
+                          "Unknown error code from server: {}, message: {}".format(
                         code, msg))
                 # find exception in error module and raise with msg
                 raise getattr(error, code[0].upper() + code[1:] + 'Error')(msg)
@@ -330,7 +330,7 @@ class Client(BaseClient):
         self._local_file = local_file
         self._force_http_get = force_http_get
         if credentials is not None:
-            self._credentials = base64.encodestring('%s:%s' % credentials)
+            self._credentials = base64.encodestring('{}:{}'.format(*credentials))
         else:
             self._credentials = None
 
@@ -347,7 +347,7 @@ class Client(BaseClient):
             if self._credentials is not None:
                 headers['Authorization'] = 'Basic ' + self._credentials.strip()
             if self._force_http_get:
-                request_url = '%s?%s' % (self._base_url, urlencode(kw))
+                request_url = '{}?{}'.format(self._base_url, urlencode(kw))
                 request = urllib2.Request(request_url, headers=headers)
             else:
                 binary_data = urlencode(kw).encode('utf-8')
@@ -408,7 +408,7 @@ def retrieveFromUrlWaiting(request,
                 # reraise any other HTTP error
                 raise
     else:
-        raise Error("Waited too often (more than %s times)" % wait_max)
+        raise Error("Waited too often (more than {} times)".format(wait_max))
     return text
 
 class ServerClient(BaseClient):
