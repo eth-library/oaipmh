@@ -218,7 +218,7 @@ class ClientServerTestCase(unittest.TestCase):
         self.assertEqual(100, len(records))
         metadatas = [metadata for (header, metadata, about) in records]
         result = []
-        for metadata in metadatas:
+        for metadata in metadatas:  # noqa: F402  # loop var `metadata` shadows oaipmh.metadata module import
             result.append(metadata.getField('title')[0])
         expected = ['Title {}'.format(i) for i in range(100)]
         self.assertEqual(expected, result)
@@ -367,7 +367,7 @@ class DeletionTestCase(unittest.TestCase):
         records = list(records)
         self.assertEqual(12, len(records))
         deleted_count = 0
-        for header, metadata, about in records:  # noqa: B007  # placeholder var in fixed-shape tuple unpack
+        for header, metadata, about in records:  # noqa: B007, F402  # placeholder var in fixed-shape tuple unpack; loop var `metadata` shadows oaipmh.metadata module import
             if header.isDeleted():
                 deleted_count += 1
                 self.assertEqual(None, metadata)

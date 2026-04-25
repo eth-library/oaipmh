@@ -30,7 +30,7 @@ class DeletedRecordsTestCase(TestCase):
         records = fakeclient.listRecords(from_=datetime(2004, 1, 1),
                                          metadataPrefix='oai_dc')
         # lazy, just test first one
-        for header, metadata, about in records:  # noqa: B007  # placeholder var in fixed-shape tuple unpack
+        for header, metadata, about in records:  # noqa: B007, F402  # placeholder vars in fixed-shape tuple unpack; loop var `metadata` shadows oaipmh.metadata module import
             if header.isDeleted():
                 self.assertTrue(metadata is None)
             else:
