@@ -19,7 +19,7 @@ class FakeServerCommon:
         try:
             return self._data[int(identifier)]
         except IndexError:
-            raise error.IdDoesNotExistError("Id does not exist: {}".format(identifier))
+            raise error.IdDoesNotExistError("Id does not exist: {}".format(identifier))  # noqa: B904  # fake-server scaffolding; IndexError plumbing isn't a meaningful cause
 
 class FakeServerBase(FakeServerCommon):
     
