@@ -44,7 +44,7 @@ def getRequestKey(kw):
     return urlencode(items)
 
 def createMapping(mapping_path):
-    f = open(os.path.join(mapping_path, 'mapping.txt'), 'r')
+    f = open(os.path.join(mapping_path, 'mapping.txt'))
     result = {}
     while 1:
         request = f.readline()
@@ -53,7 +53,7 @@ def createMapping(mapping_path):
         response = response.strip()
         if not request or not response:
             break
-        xml_f = open(os.path.join(mapping_path, response), 'r')
+        xml_f = open(os.path.join(mapping_path, response))
         text = xml_f.read()
         xml_f.close()
         result[request] = text
