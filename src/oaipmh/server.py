@@ -263,16 +263,16 @@ class ServerBase(common.ResumptionOAIPMH):
             try:
                 for key, value in request_kw.items():
                     new_kw[str(key)] = value
-            except UnicodeError:
+            except UnicodeError as err:
                 raise error.BadVerbError(
-                      "Non-ascii keys in request.")
+                      "Non-ascii keys in request.") from err
             request_kw = new_kw
             try:
                 verb = request_kw.pop('verb')
-            except KeyError:
+            except KeyError as err:
                 verb = 'unknown'
                 raise error.BadVerbError(
-                      "Required verb argument not found.")
+                      "Required verb argument not found.") from err
             if verb not in ['GetRecord', 'Identify', 'ListIdentifiers',
                             'GetMetadata', 'ListMetadataFormats',
                             'ListRecords', 'ListSets']:
@@ -286,7 +286,7 @@ class ServerBase(common.ResumptionOAIPMH):
                 except DatestampError as err:
                     raise error.BadArgumentError(
                         "The value '%s' of the argument "
-                        "'%s' is not valid." %(from_, 'from'))
+                        "'%s' is not valid." %(from_, 'from')) from err
                 del request_kw['from']
             until = request_kw.get('until')
             if until is not None:
@@ -296,7 +296,7 @@ class ServerBase(common.ResumptionOAIPMH):
                 except DatestampError as err:
                     raise error.BadArgumentError(
                         "The value '%s' of the argument "
-                        "'%s' is not valid." %(until, 'until'))
+                        "'%s' is not valid." %(until, 'until')) from err
 
             if from_ is not None and until is not None:
                 if (('T' in from_ and not 'T' in until) or
@@ -310,7 +310,7 @@ class ServerBase(common.ResumptionOAIPMH):
                 validation.validateResumptionArguments(verb, request_kw)
             except validation.BadArgumentError as e:
                 # have to raise this as a error.BadArgumentError
-                raise error.BadArgumentError(str(e))
+                raise error.BadArgumentError(str(e)) from e
             # now handle verb
             return self.handleVerb(verb, request_kw)            
         except:
@@ -459,9 +459,9 @@ def decodeResumptionToken(token):
     
     try:
         kw = parse_qs(token, True, True)
-    except ValueError:
+    except ValueError as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token: %s" % token)
+              "Unable to decode resumption token: %s" % token) from err
     result = {}
     for key, value in kw.items():
         value = value[0]
@@ -470,9 +470,9 @@ def decodeResumptionToken(token):
         result[key] = value
     try:
         cursor = int(result.pop('cursor'))
-    except (KeyError, ValueError):
+    except (KeyError, ValueError) as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token (bad cursor): %s" % token)
+              "Unable to decode resumption token (bad cursor): %s" % token) from err
     # XXX should also validate result contents. Need verb information
     # for this, and somewhat more flexible verb validation support
     return result, cursor

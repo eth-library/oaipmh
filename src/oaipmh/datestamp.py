@@ -18,8 +18,8 @@ def date_to_datestamp(d, day_granularity=False):
 def datestamp_to_datetime(datestamp, inclusive=False):
     try:
         return _datestamp_to_datetime(datestamp, inclusive)
-    except ValueError:
-        raise DatestampError(datestamp)
+    except ValueError as err:
+        raise DatestampError(datestamp) from err
     
 def _datestamp_to_datetime(datestamp, inclusive=False):
     splitted = datestamp.split('T')

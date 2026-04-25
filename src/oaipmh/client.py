@@ -296,8 +296,8 @@ class BaseClient(common.OAIPMH):
         xml = self.makeRequest(**kw)
         try:
             tree = self.parse(xml)
-        except SyntaxError:
-            raise error.XMLSyntaxError(kw)
+        except SyntaxError as err:
+            raise error.XMLSyntaxError(kw) from err
         # check whether there are errors first
         e_errors = tree.xpath('/oai:OAI-PMH/oai:error',
                               namespaces=self.getNamespaces())
