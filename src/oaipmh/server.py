@@ -1,8 +1,10 @@
-from lxml.etree import ElementTree, Element, SubElement
-from lxml import etree
 from datetime import datetime, timezone
+
+from lxml import etree
+from lxml.etree import Element, ElementTree, SubElement
+
 try:
-    from urllib.parse import urlencode, quote, unquote
+    from urllib.parse import quote, unquote, urlencode
 except ImportError:
     from urllib import quote, unquote, urlencode
 try:
@@ -11,7 +13,7 @@ except ImportError:
     from urlparse import parse_qs
 import sys
 
-from oaipmh import common, metadata, validation, error
+from oaipmh import common, error, metadata, validation
 from oaipmh.datestamp import (
     DatestampError,
     datestamp_to_datetime,

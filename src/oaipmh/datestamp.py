@@ -1,5 +1,7 @@
 import datetime
+
 from oaipmh.error import DatestampError
+
 
 def datetime_to_datestamp(dt, day_granularity=False):
     assert dt.tzinfo is None # only accept timezone naive datetimes

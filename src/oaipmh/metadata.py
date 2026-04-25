@@ -1,5 +1,7 @@
 from lxml import etree
+
 from oaipmh import common
+
 
 class MetadataRegistry:
     """A registry that contains readers and writers of metadata.

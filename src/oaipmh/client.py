@@ -5,15 +5,17 @@ try:
     import urllib.request as urllib2
     from urllib.parse import urlencode
 except ImportError:
-    import urllib2
     from urllib import urlencode
 
-import base64
-from lxml import etree
-import time
-import codecs
+    import urllib2
 
-from oaipmh import common, metadata, validation, error
+import base64
+import codecs
+import time
+
+from lxml import etree
+
+from oaipmh import common, error, metadata, validation
 from oaipmh.datestamp import datestamp_to_datetime, datetime_to_datestamp
 
 WAIT_DEFAULT = 120 # two minutes
