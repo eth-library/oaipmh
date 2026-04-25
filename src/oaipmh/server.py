@@ -299,13 +299,18 @@ class ServerBase(common.ResumptionOAIPMH):
                         "The value '%s' of the argument "
                         "'%s' is not valid." %(until, 'until')) from err
 
-            if from_ is not None and until is not None:
-                if (('T' in from_ and not 'T' in until) or
-                    ('T' in until and not 'T' in from_)):
-                    raise error.BadArgumentError(
-                        "The request has different granularities for"
-                        " the from and until parameters")
-                
+            if (
+                from_ is not None
+                and until is not None
+                and (
+                    ('T' in from_ and 'T' not in until)
+                    or ('T' in until and 'T' not in from_)
+                )
+            ):
+                raise error.BadArgumentError(
+                    "The request has different granularities for"
+                    " the from and until parameters")
+
             # now validate parameters
             try:
                 validation.validateResumptionArguments(verb, request_kw)
