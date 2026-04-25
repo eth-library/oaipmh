@@ -1,7 +1,5 @@
 # Copyright 2003, 2004, 2005 Infrae
 # Released under the BSD license (see LICENSE.txt)
-from __future__ import nested_scopes
-from __future__ import absolute_import
 
 try:
     import urllib.request as urllib2
