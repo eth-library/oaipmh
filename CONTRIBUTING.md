@@ -64,6 +64,27 @@ Run the test suite:
 pytest
 ```
 
+## Style
+
+The repository uses [Ruff](https://docs.astral.sh/ruff/) for linting, wired up via [pre-commit](https://pre-commit.com/) so the same checks run locally and in CI.
+
+After cloning, install the hooks once:
+
+```bash
+uv tool install pre-commit
+pre-commit install
+```
+
+From then on, `git commit` runs Ruff (with `--fix`) plus a small set of standard hygiene hooks (trailing-whitespace, end-of-file-fixer, YAML/TOML syntax checks, merge-conflict marker detection, large-file guard) on the files you touch. To run everything against the whole tree on demand:
+
+```bash
+pre-commit run --all-files
+```
+
+CI enforces the same hook set in the `lint` job of `.github/workflows/ci.yml`. Contributors who commit before running `pre-commit install` will see the failure surface in CI rather than locally.
+
+The repository also ships a `.git-blame-ignore-revs` file. When a future bulk-format pass lands as a single commit, its SHA is appended to this file so `git blame --ignore-revs-file=.git-blame-ignore-revs` (or `git config blame.ignoreRevsFile .git-blame-ignore-revs`) skips past it and surfaces the original author of each line.
+
 ## Commit conventions
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/). Common prefixes used in this repository:

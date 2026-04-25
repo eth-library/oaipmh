@@ -18,8 +18,8 @@ def date_to_datestamp(d, day_granularity=False):
 def datestamp_to_datetime(datestamp, inclusive=False):
     try:
         return _datestamp_to_datetime(datestamp, inclusive)
-    except ValueError:
-        raise DatestampError(datestamp)
+    except ValueError as err:
+        raise DatestampError(datestamp) from err
     
 def _datestamp_to_datetime(datestamp, inclusive=False):
     splitted = datestamp.split('T')
@@ -31,16 +31,13 @@ def _datestamp_to_datetime(datestamp, inclusive=False):
         t = t[:-1]
     else:
         d = splitted[0]
-        if inclusive:
-            # used when a date was specified as ?until parameter
-            t = '23:59:59'
-        else:
-            t = '00:00:00'
+        # '23:59:59' is used when a date was specified as ?until parameter
+        t = '23:59:59' if inclusive else '00:00:00'
     YYYY, MM, DD = d.split('-')
     hh, mm, ss = t.split(':') # this assumes there's no timezone info
-    # Some Dspace implementations are returning the in the YYYY-MM-DDThh:mm:ss.sssZ format 
-    # instead of YYYY-MM-DDThh:mm:ssZ as specified in the AOI-PMH protocol
-    # This resolves that
+    # Some Dspace implementations are returning the in the
+    # YYYY-MM-DDThh:mm:ss.sssZ format instead of YYYY-MM-DDThh:mm:ssZ as
+    # specified in the OAI-PMH protocol. This resolves that.
     ss = ss.split('.')[0]
     return datetime.datetime(
         int(YYYY), int(MM), int(DD), int(hh), int(mm), int(ss))

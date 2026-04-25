@@ -10,7 +10,6 @@ except ImportError:
     import urllib2
     from urllib import urlencode
 
-import sys
 import base64
 from lxml import etree
 import time
@@ -296,8 +295,8 @@ class BaseClient(common.OAIPMH):
         xml = self.makeRequest(**kw)
         try:
             tree = self.parse(xml)
-        except SyntaxError:
-            raise error.XMLSyntaxError(kw)
+        except SyntaxError as err:
+            raise error.XMLSyntaxError(kw) from err
         # check whether there are errors first
         e_errors = tree.xpath('/oai:OAI-PMH/oai:error',
                               namespaces=self.getNamespaces())
@@ -385,10 +384,10 @@ def ResumptionListGenerator(firstBatch, nextBatch):
 
 def retrieveFromUrlWaiting(request,
                            wait_max=WAIT_MAX, wait_default=WAIT_DEFAULT,
-                           expected_errcodes={503}):
+                           expected_errcodes={503}):  # noqa: B006 — public API; mutating the default would be a caller bug, deferred to Phase B
     """Get text from URL, handling 503 Retry-After.
     """
-    for i in list(range(wait_max)):
+    for _i in list(range(wait_max)):
         try:
             f = urllib2.urlopen(request)
             text = f.read()

@@ -12,7 +12,11 @@ except ImportError:
 import sys
 
 from oaipmh import common, metadata, validation, error
-from oaipmh.datestamp import datestamp_to_datetime, datetime_to_datestamp, DatestampError
+from oaipmh.datestamp import (
+    DatestampError,
+    datestamp_to_datetime,
+    datetime_to_datestamp,
+)
 
 NS_OAIPMH = 'http://www.openarchives.org/OAI/2.0/'
 NS_XSI = 'http://www.w3.org/2001/XMLSchema-instance'
@@ -126,11 +130,12 @@ class XMLTreeServer(object):
             verb="ListRecords", **kw)
         def outputFunc(element, records, token_kw):
             metadataPrefix = token_kw['metadataPrefix']
-            for header, metadata, about in records:
+            for header, record_metadata, _about in records:
                 e_record = SubElement(e_listRecords, nsoai('record'))
                 self._outputHeader(e_record, header)
                 if not header.isDeleted():
-                    self._outputMetadata(e_record, metadataPrefix, metadata)
+                    self._outputMetadata(
+                        e_record, metadataPrefix, record_metadata)
                 # XXX about
         self._outputResuming(
             e_listRecords,
@@ -143,7 +148,7 @@ class XMLTreeServer(object):
         envelope, e_listSets = self._outputEnvelope(
             verb='ListSets', **kw)
         def outputFunc(element, sets, token_kw):
-            for setSpec, setName, setDescription in sets:
+            for setSpec, setName, _setDescription in sets:
                 e_set = SubElement(e_listSets, nsoai('set'))
                 e_setSpec = SubElement(e_set, nsoai('setSpec'))
                 e_setSpec.text = setSpec
@@ -263,16 +268,16 @@ class ServerBase(common.ResumptionOAIPMH):
             try:
                 for key, value in request_kw.items():
                     new_kw[str(key)] = value
-            except UnicodeError:
+            except UnicodeError as err:
                 raise error.BadVerbError(
-                      "Non-ascii keys in request.")
+                      "Non-ascii keys in request.") from err
             request_kw = new_kw
             try:
                 verb = request_kw.pop('verb')
-            except KeyError:
+            except KeyError as err:
                 verb = 'unknown'
                 raise error.BadVerbError(
-                      "Required verb argument not found.")
+                      "Required verb argument not found.") from err
             if verb not in ['GetRecord', 'Identify', 'ListIdentifiers',
                             'GetMetadata', 'ListMetadataFormats',
                             'ListRecords', 'ListSets']:
@@ -286,7 +291,7 @@ class ServerBase(common.ResumptionOAIPMH):
                 except DatestampError as err:
                     raise error.BadArgumentError(
                         "The value '%s' of the argument "
-                        "'%s' is not valid." %(from_, 'from'))
+                        "'%s' is not valid." %(from_, 'from')) from err
                 del request_kw['from']
             until = request_kw.get('until')
             if until is not None:
@@ -296,24 +301,29 @@ class ServerBase(common.ResumptionOAIPMH):
                 except DatestampError as err:
                     raise error.BadArgumentError(
                         "The value '%s' of the argument "
-                        "'%s' is not valid." %(until, 'until'))
+                        "'%s' is not valid." %(until, 'until')) from err
 
-            if from_ is not None and until is not None:
-                if (('T' in from_ and not 'T' in until) or
-                    ('T' in until and not 'T' in from_)):
-                    raise error.BadArgumentError(
-                        "The request has different granularities for"
-                        " the from and until parameters")
-                
+            if (
+                from_ is not None
+                and until is not None
+                and (
+                    ('T' in from_ and 'T' not in until)
+                    or ('T' in until and 'T' not in from_)
+                )
+            ):
+                raise error.BadArgumentError(
+                    "The request has different granularities for"
+                    " the from and until parameters")
+
             # now validate parameters
             try:
                 validation.validateResumptionArguments(verb, request_kw)
             except validation.BadArgumentError as e:
                 # have to raise this as a error.BadArgumentError
-                raise error.BadArgumentError(str(e))
+                raise error.BadArgumentError(str(e)) from e
             # now handle verb
             return self.handleVerb(verb, request_kw)            
-        except:
+        except:  # noqa: E722 — top-level OAI-PMH error funnel; narrowing risks losing protocol-level error reporting, deferred
             # in case of exception, call exception handler
             return self.handleException(request_kw, sys.exc_info())
         
@@ -459,9 +469,9 @@ def decodeResumptionToken(token):
     
     try:
         kw = parse_qs(token, True, True)
-    except ValueError:
+    except ValueError as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token: %s" % token)
+              "Unable to decode resumption token: %s" % token) from err
     result = {}
     for key, value in kw.items():
         value = value[0]
@@ -470,9 +480,9 @@ def decodeResumptionToken(token):
         result[key] = value
     try:
         cursor = int(result.pop('cursor'))
-    except (KeyError, ValueError):
+    except (KeyError, ValueError) as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token (bad cursor): %s" % token)
+              "Unable to decode resumption token (bad cursor): %s" % token) from err
     # XXX should also validate result contents. Need verb information
     # for this, and somewhat more flexible verb validation support
     return result, cursor

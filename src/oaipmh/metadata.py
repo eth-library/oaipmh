@@ -1,5 +1,4 @@
 from lxml import etree
-from lxml.etree import SubElement
 from oaipmh import common
 
 class MetadataRegistry(object):
