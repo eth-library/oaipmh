@@ -126,7 +126,7 @@ class XMLTreeServer(object):
             verb="ListRecords", **kw)
         def outputFunc(element, records, token_kw):
             metadataPrefix = token_kw['metadataPrefix']
-            for header, metadata, about in records:
+            for header, metadata, _about in records:
                 e_record = SubElement(e_listRecords, nsoai('record'))
                 self._outputHeader(e_record, header)
                 if not header.isDeleted():
@@ -143,7 +143,7 @@ class XMLTreeServer(object):
         envelope, e_listSets = self._outputEnvelope(
             verb='ListSets', **kw)
         def outputFunc(element, sets, token_kw):
-            for setSpec, setName, setDescription in sets:
+            for setSpec, setName, _setDescription in sets:
                 e_set = SubElement(e_listSets, nsoai('set'))
                 e_setSpec = SubElement(e_set, nsoai('setSpec'))
                 e_setSpec.text = setSpec

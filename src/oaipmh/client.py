@@ -388,7 +388,7 @@ def retrieveFromUrlWaiting(request,
                            expected_errcodes={503}):
     """Get text from URL, handling 503 Retry-After.
     """
-    for i in list(range(wait_max)):
+    for _i in list(range(wait_max)):
         try:
             f = urllib2.urlopen(request)
             text = f.read()

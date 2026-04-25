@@ -9,7 +9,7 @@ def validate(argspec, dictionary):
         if arg_type == 'exclusive':
             exclusive = arg_name
     # check if we have unknown arguments
-    for key, value in list(dictionary.items()):
+    for key, _value in list(dictionary.items()):
         if not key in argspec:
             msg = "Unknown argument: %s" % key
             raise BadArgumentError(msg)
