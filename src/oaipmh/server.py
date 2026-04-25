@@ -314,7 +314,7 @@ class ServerBase(common.ResumptionOAIPMH):
                 raise error.BadArgumentError(str(e)) from e
             # now handle verb
             return self.handleVerb(verb, request_kw)            
-        except:
+        except:  # noqa: E722 — top-level OAI-PMH error funnel; narrowing risks losing protocol-level error reporting, deferred
             # in case of exception, call exception handler
             return self.handleException(request_kw, sys.exc_info())
         
