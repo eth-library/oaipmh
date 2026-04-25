@@ -60,7 +60,7 @@ class BatchingFakeServerBase(FakeServerCommon):
 def datestampInRange(header, from_, until):
     if from_ is not None and header.datestamp() < from_:
         return False
-    if until is not None and header.datestamp() > until:
+    if until is not None and header.datestamp() > until:  # noqa: SIM103  # explicit two-guard form mirrors the from_ guard above; collapsing hurts readability
         return False
     return True
 
