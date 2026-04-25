@@ -28,7 +28,7 @@ def validate(argspec, dictionary):
                 raise BadArgumentError(msg)
     return
         
-class ValidationSpec(object):
+class ValidationSpec:
     GetRecord = {
         'identifier':'required',
         'metadataPrefix':'required'

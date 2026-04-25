@@ -1,7 +1,7 @@
 from importlib.metadata import version as _get_version
 
 
-class Header(object):
+class Header:
     def __init__(self, element, identifier, datestamp, setspec, deleted):
         self._element = element
         # force identifier to be a string, it might be 
@@ -26,7 +26,7 @@ class Header(object):
     def isDeleted(self):
         return self._deleted
 
-class Metadata(object):
+class Metadata:
     def __init__(self, element, map):
         self._element = element
         self._map = map
@@ -42,7 +42,7 @@ class Metadata(object):
 
     __getitem__ = getField
 
-class Identify(object):
+class Identify:
     def __init__(self, repositoryName, baseURL, protocolVersion, adminEmails,
                  earliestDatestamp, deletedRecord, granularity, compression,
                  toolkit_description=True):
@@ -107,7 +107,7 @@ def ResumptionTokenSpec(dict):
     dict['resumptionToken'] = 'exclusive'
     return dict
 
-class OAIMethodImpl(object):
+class OAIMethodImpl:
     def __init__(self, verb):
         self._verb = verb
         
@@ -120,7 +120,7 @@ def OAIMethod(verb):
         return obj(self, **kw)
     return method
 
-class OAIPMH(object):
+class OAIPMH:
     """Mixin that implements the Python-level OAI-PMH interface.
 
     It does not include resumptionToken handling.
@@ -159,7 +159,7 @@ class OAIPMH(object):
         'ListSets',
         )
     
-class ResumptionOAIPMH(object):
+class ResumptionOAIPMH:
     """Mixin that implements the Resumption-capable OAI-PMH interface.
 
     It passes the arguments on to the 'handleVerb' method, which

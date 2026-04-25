@@ -27,7 +27,7 @@ NSMAP = {
     None: NS_OAIPMH,
     }
 
-class XMLTreeServer(object):
+class XMLTreeServer:
     """A server that responds to messages by returning XML trees.
 
     This is an implementation class that normally would not be exposed

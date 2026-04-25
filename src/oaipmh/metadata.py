@@ -1,7 +1,7 @@
 from lxml import etree
 from oaipmh import common
 
-class MetadataRegistry(object):
+class MetadataRegistry:
     """A registry that contains readers and writers of metadata.
 
     a reader is a function that takes a chunk of (parsed) XML and
@@ -48,7 +48,7 @@ global_metadata_registry = MetadataRegistry()
 class Error(Exception):
     pass
 
-class MetadataReader(object):
+class MetadataReader:
     """A default implementation of a reader based on fields.
     """
     def __init__(self, fields, namespaces=None):
