@@ -45,7 +45,7 @@ def getRequestKey(kw):
     return urlencode(items)
 
 def createMapping(mapping_path):
-    f = open(os.path.join(mapping_path, 'mapping.txt'))
+    f = open(os.path.join(mapping_path, 'mapping.txt'))  # noqa: SIM115  # explicit close at end of fixture-loader scope; context-manager refactor deferred
     result = {}
     while 1:
         request = f.readline()
@@ -54,7 +54,7 @@ def createMapping(mapping_path):
         response = response.strip()
         if not request or not response:
             break
-        xml_f = open(os.path.join(mapping_path, response))
+        xml_f = open(os.path.join(mapping_path, response))  # noqa: SIM115  # explicit close in test fixture loader; context-manager refactor deferred
         text = xml_f.read()
         xml_f.close()
         result[request] = text
@@ -73,7 +73,7 @@ class FakeCreaterClient(client.Client):
 
     def save(self):
         mapping_path = self._mapping_path
-        f = open(os.path.join(mapping_path, 'mapping.txt'), 'w')
+        f = open(os.path.join(mapping_path, 'mapping.txt'), 'w')  # noqa: SIM115  # explicit close at end of save(); context-manager refactor deferred
         i = 0
         for request, response in self._mapping.items():
             f.write(request)
@@ -81,7 +81,7 @@ class FakeCreaterClient(client.Client):
             filename = str(i).zfill(5) + ".xml"
             f.write(filename)
             f.write('\n')
-            response_f = open(os.path.join(mapping_path, filename), 'w')
+            response_f = open(os.path.join(mapping_path, filename), 'w')  # noqa: SIM115  # explicit close inside loop; context-manager refactor deferred
             response_f.write(response)
             response_f.close()
             i += 1  # noqa: SIM113  # manual counter consumed mid-body for filename; enumerate refactor deferred to a separate test-code slug
