@@ -186,7 +186,7 @@ class ClientTestCase(TestCase):
 
     def test_custom_retry_policy(self):
         """check request is retried on 500 if asked to"""
-        with mock.patch(URLOPEN_PATH, side_effect=http_error(500)):
+        with mock.patch(URLOPEN_PATH, side_effect=http_error(500)):  # noqa: SIM117  # nested with-blocks read more clearly than parenthesised combined form
             with mock.patch('time.sleep') as sleep:
                 urlclient = client.Client('http://mock.me', custom_retry_policy={
                     'expected-errcodes': {500},
@@ -200,7 +200,7 @@ class ClientTestCase(TestCase):
                 sleep.assert_has_calls([mock.call(5)] * 3)
 
     def test_custom_retry_policy_default_wait_max(self):
-        with mock.patch(URLOPEN_PATH, side_effect=http_error(500)):
+        with mock.patch(URLOPEN_PATH, side_effect=http_error(500)):  # noqa: SIM117  # nested with-blocks read more clearly than parenthesised combined form
             with mock.patch('time.sleep') as sleep:
                 urlclient = client.Client('http://mock.me', custom_retry_policy={
                     'expected-errcodes': {500},
