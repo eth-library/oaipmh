@@ -10,7 +10,7 @@ def validate(argspec, dictionary):
             exclusive = arg_name
     # check if we have unknown arguments
     for key, _value in list(dictionary.items()):
-        if not key in argspec:
+        if key not in argspec:
             msg = "Unknown argument: %s" % key
             raise BadArgumentError(msg)
     # first investigate if we have exclusive argument
@@ -24,7 +24,7 @@ def validate(argspec, dictionary):
     for arg_name, arg_type in list(argspec.items()): 
         if arg_type == 'required':
             msg = "Argument required but not found: %s" % arg_name
-            if not arg_name in dictionary:
+            if arg_name not in dictionary:
                 raise BadArgumentError(msg)
     return
         
