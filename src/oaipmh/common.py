@@ -79,9 +79,9 @@ class Identify:
                 'xmlns="http://oai.dlib.vt.edu/OAI/metadata/toolkit" '
                 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
                 "<title>oaipmh</title>"
-                "{}"
+                f"{version}"
                 "<URL>https://github.com/eth-library/oaipmh</URL>"
-                "</toolkit>".format(version)
+                "</toolkit>"
             )
 
     def repositoryName(self):

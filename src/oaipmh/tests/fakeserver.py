@@ -20,7 +20,7 @@ class FakeServerCommon:
         try:
             return self._data[int(identifier)]
         except IndexError:
-            raise error.IdDoesNotExistError("Id does not exist: {}".format(identifier))  # noqa: B904  # fake-server scaffolding; IndexError plumbing isn't a meaningful cause
+            raise error.IdDoesNotExistError(f"Id does not exist: {identifier}")  # noqa: B904  # fake-server scaffolding; IndexError plumbing isn't a meaningful cause
 
 
 class FakeServerBase(FakeServerCommon):
@@ -94,7 +94,7 @@ def createFakeData():
         data.append(
             (
                 common.Header(fake_element, str(i), datestamp, "", False),
-                common.Metadata(fake_element, {"title": ["Title {}".format(i)]}),
+                common.Metadata(fake_element, {"title": [f"Title {i}"]}),
                 None,
             )
         )
@@ -125,7 +125,7 @@ class FakeServerWithDeletions(FakeServerBase):
             data.append(
                 (
                     common.Header(fake_element, str(i), datestamp, "", False),
-                    common.Metadata(fake_element, {"title": ["Title {}".format(i)]}),
+                    common.Metadata(fake_element, {"title": [f"Title {i}"]}),
                     None,
                 )
             )

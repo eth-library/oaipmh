@@ -11,20 +11,18 @@ def validate(argspec, dictionary):
     # check if we have unknown arguments
     for key, _value in list(dictionary.items()):
         if key not in argspec:
-            msg = "Unknown argument: {}".format(key)
+            msg = f"Unknown argument: {key}"
             raise BadArgumentError(msg)
     # first investigate if we have exclusive argument
     if exclusive in dictionary:
         if len(dictionary) > 1:
-            msg = "Exclusive argument {} is used but other arguments found.".format(
-                exclusive
-            )
+            msg = f"Exclusive argument {exclusive} is used but other arguments found."
             raise BadArgumentError(msg)
         return
     # if not exclusive, check for required
     for arg_name, arg_type in list(argspec.items()):
         if arg_type == "required":
-            msg = "Argument required but not found: {}".format(arg_name)
+            msg = f"Argument required but not found: {arg_name}"
             if arg_name not in dictionary:
                 raise BadArgumentError(msg)
     return

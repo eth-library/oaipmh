@@ -82,7 +82,7 @@ class MetadataReader:
                 # of lxml.etree._ElementUnicodeResult objects.
                 value = [str(v) for v in e(expr)]
             else:
-                raise Error("Unknown field type: {}".format(field_type))
+                raise Error(f"Unknown field type: {field_type}")
             map[field_name] = value
         return common.Metadata(element, map)
 

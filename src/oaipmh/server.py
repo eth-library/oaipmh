@@ -168,7 +168,7 @@ class XMLTreeServer:
     def _outputBasicEnvelope(self, **kw):
         e_oaipmh = Element(nsoai("OAI-PMH"), nsmap=self._nsmap)
         e_oaipmh.set(
-            "{{{}}}schemaLocation".format(NS_XSI),
+            f"{{{NS_XSI}}}schemaLocation",
             (
                 "http://www.openarchives.org/OAI/2.0/ "
                 "http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"
@@ -243,7 +243,7 @@ class XMLTreeServer:
         e_metadata = SubElement(element, nsoai("metadata"))
         if not self._metadata_registry.hasWriter(metadata_prefix):
             raise error.CannotDisseminateFormatError(
-                "Unknown metadata format: {}".format(metadata_prefix)
+                f"Unknown metadata format: {metadata_prefix}"
             )
         self._metadata_registry.writeMetadata(metadata_prefix, e_metadata, metadata)
 
@@ -286,7 +286,7 @@ class ServerBase(common.ResumptionOAIPMH):
                 "ListRecords",
                 "ListSets",
             ]:
-                raise error.BadVerbError("Illegal verb: {}".format(verb))
+                raise error.BadVerbError(f"Illegal verb: {verb}")
             # replace from and until arguments if necessary
             from_ = request_kw.get("from")
             if from_ is not None:
@@ -485,7 +485,7 @@ def decodeResumptionToken(token):
         kw = parse_qs(token, True, True)
     except ValueError as err:
         raise error.BadResumptionTokenError(
-            "Unable to decode resumption token: {}".format(token)
+            f"Unable to decode resumption token: {token}"
         ) from err
     result = {}
     for key, value in kw.items():
@@ -497,7 +497,7 @@ def decodeResumptionToken(token):
         cursor = int(result.pop("cursor"))
     except (KeyError, ValueError) as err:
         raise error.BadResumptionTokenError(
-            "Unable to decode resumption token (bad cursor): {}".format(token)
+            f"Unable to decode resumption token (bad cursor): {token}"
         ) from err
     # XXX should also validate result contents. Need verb information
     # for this, and somewhat more flexible verb validation support
@@ -509,8 +509,8 @@ def oai_dc_writer(element, metadata):
         element, nsoaidc("dc"), nsmap={"oai_dc": NS_OAIDC, "dc": NS_DC, "xsi": NS_XSI}
     )
     e_dc.set(
-        "{{{}}}schemaLocation".format(NS_XSI),
-        "{} http://www.openarchives.org/OAI/2.0/oai_dc.xsd".format(NS_DC),
+        f"{{{NS_XSI}}}schemaLocation",
+        f"{NS_DC} http://www.openarchives.org/OAI/2.0/oai_dc.xsd",
     )
     map = metadata.getMap()
     for name in [
@@ -536,12 +536,12 @@ def oai_dc_writer(element, metadata):
 
 
 def nsoai(name):
-    return "{{{}}}{}".format(NS_OAIPMH, name)
+    return f"{{{NS_OAIPMH}}}{name}"
 
 
 def nsoaidc(name):
-    return "{{{}}}{}".format(NS_OAIDC, name)
+    return f"{{{NS_OAIDC}}}{name}"
 
 
 def nsdc(name):
-    return "{{{}}}{}".format(NS_DC, name)
+    return f"{{{NS_DC}}}{name}"

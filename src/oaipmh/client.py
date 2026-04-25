@@ -55,7 +55,7 @@ class BaseClient(common.OAIPMH):
         elif granularity == "YYYY-MM-DDThh:mm:ssZ":
             self._day_granularity = False
         else:
-            raise Error("Non-standard granularity on server: {}".format(granularity))
+            raise Error(f"Non-standard granularity on server: {granularity}")
 
     def handleVerb(self, verb, kw):
         # validate kw first
@@ -312,9 +312,7 @@ class BaseClient(common.OAIPMH):
                     "noSetHierarchy",
                 ]:
                     raise error.UnknownError(
-                        "Unknown error code from server: {}, message: {}".format(
-                            code, msg
-                        )
+                        f"Unknown error code from server: {code}, message: {msg}"
                     )
                 # find exception in error module and raise with msg
                 raise getattr(error, code[0].upper() + code[1:] + "Error")(msg)
@@ -357,7 +355,7 @@ class Client(BaseClient):
             if self._credentials is not None:
                 headers["Authorization"] = "Basic " + self._credentials.strip()
             if self._force_http_get:
-                request_url = "{}?{}".format(self._base_url, urlencode(kw))
+                request_url = f"{self._base_url}?{urlencode(kw)}"
                 request = urllib2.Request(request_url, headers=headers)
             else:
                 binary_data = urlencode(kw).encode("utf-8")
@@ -419,7 +417,7 @@ def retrieveFromUrlWaiting(
                 # reraise any other HTTP error
                 raise
     else:
-        raise Error("Waited too often (more than {} times)".format(wait_max))
+        raise Error(f"Waited too often (more than {wait_max} times)")
     return text
 
 
