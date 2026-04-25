@@ -1,8 +1,10 @@
-from unittest import TestCase
-from .fakeclient import FakeClient
 import os
-from oaipmh import metadata
 from datetime import datetime
+from unittest import TestCase
+
+from oaipmh import metadata
+
+from .fakeclient import FakeClient
 
 directory = os.path.dirname(__file__)
 fake2 = os.path.join(directory, 'fake2')

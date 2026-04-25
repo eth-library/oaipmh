@@ -1,5 +1,7 @@
 import unittest
+
 from oaipmh import validation
+
 
 class ArgumentValidatorTestCase(unittest.TestCase):
     def test_optional(self):

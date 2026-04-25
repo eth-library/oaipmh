@@ -1,5 +1,7 @@
-from oaipmh import common, error
 from datetime import datetime
+
+from oaipmh import common, error
+
 
 class FakeServerCommon:
     def identify(self):

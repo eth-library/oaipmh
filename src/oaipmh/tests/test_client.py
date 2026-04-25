@@ -1,13 +1,13 @@
-from unittest import TestCase
-from unittest import mock
-
-from .fakeclient import FakeClient, GranularityFakeClient, FakeRequestError
 import os
-from datetime import datetime
 import urllib.request as urllib2
+from datetime import datetime
+from unittest import TestCase, mock
+
+from .fakeclient import FakeClient, FakeRequestError, GranularityFakeClient
+
 URLOPEN_PATH = 'urllib.request.urlopen'
 
-from oaipmh import metadata, validation, client
+from oaipmh import client, metadata, validation
 
 directory = os.path.dirname(__file__)
 fake1 = os.path.join(directory, 'fake1')

@@ -1,7 +1,8 @@
-from oaipmh import client, common
 import os.path
 from datetime import datetime
 from urllib.parse import urlencode
+
+from oaipmh import client, common
 
 
 class FakeClient(client.BaseClient):

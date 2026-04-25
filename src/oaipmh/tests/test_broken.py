@@ -1,8 +1,9 @@
 import os
 from unittest import TestCase
 
+from oaipmh import error, metadata
+
 from .fakeclient import FakeClient
-from oaipmh import metadata, error
 
 test_directory = os.path.dirname(__file__)
 

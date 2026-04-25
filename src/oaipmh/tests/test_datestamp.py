@@ -1,8 +1,9 @@
 from datetime import datetime
 from unittest import TestCase
-from oaipmh.datestamp import datestamp_to_datetime,\
-     tolerant_datestamp_to_datetime
+
+from oaipmh.datestamp import datestamp_to_datetime, tolerant_datestamp_to_datetime
 from oaipmh.error import DatestampError
+
 
 class DatestampTestCase(TestCase):
     def test_strict_datestamp_to_datetime(self):

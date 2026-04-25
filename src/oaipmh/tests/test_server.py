@@ -1,11 +1,13 @@
-import unittest
 import os
-from io import BytesIO
-from oaipmh import server, client, metadata, error
-from lxml import etree
+import unittest
 from datetime import datetime
-from . import fakeclient
-from . import fakeserver
+from io import BytesIO
+
+from lxml import etree
+
+from oaipmh import client, error, metadata, server
+
+from . import fakeclient, fakeserver
 
 NS_OAIPMH = server.NS_OAIPMH
 
