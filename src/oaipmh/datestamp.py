@@ -31,11 +31,8 @@ def _datestamp_to_datetime(datestamp, inclusive=False):
         t = t[:-1]
     else:
         d = splitted[0]
-        if inclusive:
-            # used when a date was specified as ?until parameter
-            t = '23:59:59'
-        else:
-            t = '00:00:00'
+        # '23:59:59' is used when a date was specified as ?until parameter
+        t = '23:59:59' if inclusive else '00:00:00'
     YYYY, MM, DD = d.split('-')
     hh, mm, ss = t.split(':') # this assumes there's no timezone info
     # Some Dspace implementations are returning the in the YYYY-MM-DDThh:mm:ss.sssZ format 
