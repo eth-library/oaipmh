@@ -4,10 +4,10 @@ class IOAI:
 
         metadataPrefix - identifies metadata set to retrieve
         identifier - repository-unique identifier of record
-        
+
         Should raise error.CannotDisseminateFormatError if
         metadataPrefix is unknown or not supported by identifier.
-        
+
         Should raise error.IdDoesNotExistError if identifier is
         unknown or illegal.
 
@@ -34,10 +34,10 @@ class IOAI:
 
         Should raise error.NoSetHierarchyError if the repository does not
         support sets.
-        
+
         Returns an iterable of headers.
         """
-        
+
     def listMetadataFormats(identifier=None):
         """List metadata formats supported by repository or record.
 
@@ -48,14 +48,14 @@ class IOAI:
 
         Should raise error.IdDoesNotExistError if record with
         identifier does not exist.
-        
+
         Should raise error.NoMetadataFormatsError if no formats are
         available for the indicated record.
 
         Returns an iterable of metadataPrefix, schema, metadataNamespace
         tuples (each entry in the tuple is a string).
         """
-        
+
     def listRecords(metadataPrefix, set=None, from_=None, until=None):
         """Get a list of header, metadata and about information on records.
 
@@ -82,7 +82,8 @@ class IOAI:
 
         Returns an iterable of setSpec, setName tuples (strings).
         """
-        
+
+
 class IBatchingOAI:
     """Very similar to IOAI, but the implementation can be batch-aware.
 
@@ -90,47 +91,45 @@ class IBatchingOAI:
     cursor and batch_size, which indicate the batch currently being
     requested.
     """
-    
+
     def getRecord(metadataPrefix, identifier):
         pass
-    
+
     def identify():
         pass
-    
-    def listIdentifiers(metadataPrefix, set=None, from_=None, until=None,
-                        cursor=0, batch_size=10):
+
+    def listIdentifiers(
+        metadataPrefix, set=None, from_=None, until=None, cursor=0, batch_size=10
+    ):
         pass
-    
+
     def listMetadataFormats(identifier=None):
         pass
-    
-    def listRecords(metadataPrefix, set=None, from_=None, until=None,
-                    cursor=0, batch_size=10):
+
+    def listRecords(
+        metadataPrefix, set=None, from_=None, until=None, cursor=0, batch_size=10
+    ):
         pass
-    
+
     def listSets():
         pass
-    
+
+
 class IIdentify:
     def repositoryName():
-        """Name of repository.
-        """
+        """Name of repository."""
 
     def baseURL():
-        """Base URL for OAI-PMH requests.
-        """
+        """Base URL for OAI-PMH requests."""
 
     def protocolVersion():
-        """OAI-PMH protocol version (should always be '2.0')
-        """
+        """OAI-PMH protocol version (should always be '2.0')"""
 
     def adminEmails():
-        """List of email addresses of repository administrators.
-        """
+        """List of email addresses of repository administrators."""
 
     def earliestDateStamp():
-        """The datetime (datestamp) of the earliest record in repository.
-        """
+        """The datetime (datestamp) of the earliest record in repository."""
 
     def deletedRecord():
         """Way the repository handles deleted records.
@@ -149,11 +148,11 @@ class IIdentify:
 
         'identity' is the 'do-nothing' scheme.
         """
-        
+
+
 class IHeader:
     def identifier():
-        """Repository-unique identifier of this record.
-        """
+        """Repository-unique identifier of this record."""
 
     def datestamp():
         """Datetime of creation, last modification or deletion of the record.
@@ -162,9 +161,7 @@ class IHeader:
         """
 
     def setSpec():
-        """A list of sets this record is a member of.
-        """
+        """A list of sets this record is a member of."""
 
     def isDeleted():
-        """If true, record has been deleted.
-        """
+        """If true, record has been deleted."""

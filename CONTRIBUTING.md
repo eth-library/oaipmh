@@ -75,7 +75,7 @@ uv tool install pre-commit
 pre-commit install
 ```
 
-From then on, `git commit` runs Ruff (with `--fix`) plus a small set of standard hygiene hooks (trailing-whitespace, end-of-file-fixer, YAML/TOML syntax checks, merge-conflict marker detection, large-file guard) on the files you touch. To run everything against the whole tree on demand:
+From then on, `git commit` runs Ruff (with `--fix`) and `ruff format` plus a small set of standard hygiene hooks (trailing-whitespace, end-of-file-fixer, YAML/TOML syntax checks, merge-conflict marker detection, large-file guard) on the files you touch. To run everything against the whole tree on demand:
 
 ```bash
 pre-commit run --all-files

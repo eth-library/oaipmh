@@ -7,17 +7,17 @@ repos:
     hooks:
       - id: ruff-check
         args: [--fix]
+      - id: ruff-format
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # v6.0.0
     hooks:
       # Skip files where whitespace is content (README Markdown line breaks,
-      # XML/XSD test fixtures) or where bulk whitespace changes are reserved
-      # for a separate commit recorded in `.git-blame-ignore-revs`.
+      # XML/XSD test fixtures).
       - id: trailing-whitespace
-        exclude: ^(README\.md|src/oaipmh/.*\.py|src/oaipmh/tests/.*\.(xml|xsd))$
+        exclude: ^(README\.md|src/oaipmh/tests/.*\.(xml|xsd))$
       - id: end-of-file-fixer
-        exclude: ^(src/oaipmh/.*\.py|src/oaipmh/tests/.*\.(xml|xsd))$
+        exclude: ^(src/oaipmh/tests/.*\.(xml|xsd))$
       - id: check-yaml
       - id: check-toml
       - id: check-merge-conflict

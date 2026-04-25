@@ -1,12 +1,9 @@
 # Commit SHAs whose changes should be ignored by `git blame`.
 #
-# These are typically bulk reformat or rename passes that shift every line
-# without changing program behaviour. Including them here keeps blame output
-# focused on the commits that actually authored each line.
-#
-# Convention: one full-length commit SHA per line. An optional `# comment`
-# trailer is allowed for context (the commit subject, e.g. the PR number, or
-# the rule that drove the rewrite).
+# These are bulk reformat or mechanical rewrite passes that shift every line
+# without changing program behaviour. Listing them here keeps `git blame`
+# output focused on the commits that actually authored each line, rather
+# than attributing the line to whoever last ran the formatter.
 #
 # Configure git to consult this file by default:
 #
@@ -14,6 +11,42 @@
 #
 # (or pass `--ignore-revs-file=.git-blame-ignore-revs` ad-hoc).
 #
-# Phase A of the Ruff + pre-commit adoption deliberately does not run
-# `ruff format`; Phase B will append the bulk-reformat merge-commit SHA
-# below.
+# Convention: one full-length commit SHA per line. An optional `# comment`
+# trailer is allowed for context (typically the date and the commit subject
+# or the lint rule that drove the rewrite).
+#
+# Commits that belong here in this repo:
+#
+#   * Repo-wide `ruff format` passes.
+#   * Repo-wide `ruff check --fix` mechanical sweeps that touch many files
+#     for a single rule (import sorting, unused-import removal, syntax
+#     modernisation, and similar).
+#   * Follow-up hygiene commits that re-attach `# noqa` annotations or
+#     similar trailing markers displaced by a format reflow.
+#
+# Behaviour-changing commits do not belong here, even if they touch many
+# files.
+
+e9ba5767949220f002b544b03820f39a3f69ff27  # 2026-04-25 style: drop redundant (object) base class (UP004)
+51279b711a40fcd829fa58f6bc01bb2d2e167f92  # 2026-04-25 style: collapse super(Cls, self) to super() (UP008)
+d1887ec97788a915aec25c921499879798bbed15  # 2026-04-25 style: rewrite 'not X in Y' as 'X not in Y' (E713)
+778bc4ec4b7ddf0d9b118f0f03d7fbfe6d7c3bbe  # 2026-04-25 style: rewrite printf-style formatting as .format() (UP031)
+49990319a3561ada7c882e37da310fbdccb3d688  # 2026-04-25 style: drop unused __future__ imports (UP010)
+a904165a5a75a862b92f4bd735e8f9672c089b6f  # 2026-04-25 style: sort imports (I001)
+7c8aaa9d46cabd31a610d92289663b6eefaf1af9  # 2026-04-25 style(tests): delete unused imports (F401)
+33ce4100eb6d777124c95d8c3ef83ed0a599b899  # 2026-04-25 style(tests): drop redundant (object) base class (UP004)
+24a226e03a88925d3962854212a0472e17ce110a  # 2026-04-25 style(tests): drop redundant open() mode arguments (UP015)
+7c275735b26f99976a27f5803e70c956f8e07a2b  # 2026-04-25 style(tests): rewrite printf-style formatting as .format() (UP031)
+238925d7b5376c1485126be5452e573b1840efc2  # 2026-04-25 style(tests): sort imports (I001)
+4245459dcd04622059c4385fb2bdc05886c1ba19  # 2026-04-25 style(tests): annotate B007 sites with rationale (B007)
+2ef5a9200a10a8a811d764ada69afbc99f9182d8  # 2026-04-25 style(tests): annotate B904 site with rationale (B904)
+a43b3a7607fce663034b79f17b6337fc56c7b1f1  # 2026-04-25 style(tests): annotate E402 site with rationale (E402)
+bf5c0f1967bf004bfc3e2ce4fddc2d76639c3edf  # 2026-04-25 style(tests): annotate F402 sites with rationale (F402)
+a0569f69ebbf1e781021b90bd2ae4bab21f9a477  # 2026-04-25 style(tests): annotate F841 site with rationale (F841)
+4a7488d8234fd63b8973df12e73cf5c5781b675a  # 2026-04-25 style(tests): annotate SIM103 site with rationale (SIM103)
+d2059ad2efe643e1972f2679059ef3c3cb7e1a37  # 2026-04-25 style(tests): annotate SIM113 site with rationale (SIM113)
+a91f394b6aca6351969cd55679e1c794bfd9981a  # 2026-04-25 style(tests): annotate SIM115 sites with rationale (SIM115)
+20eae94c9d912241809e8db10def8fed62ad4610  # 2026-04-25 style(tests): annotate SIM117 sites with rationale (SIM117)
+b1101287cbfbfdcb9030f2c0d7659df9363bde86  # 2026-04-25 style: apply ruff format repo-wide
+8b481b04a32ffcf25ae2f9b0b36607a4d399af50  # 2026-04-25 style: rewrite .format() calls as f-strings (UP032)
+8c18467f44a3e5adbd41b8f17c1e1d25fb83c0ce  # 2026-04-25 style: re-attach noqa comments displaced by formatter pass

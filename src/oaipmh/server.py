@@ -1,8 +1,10 @@
-from lxml.etree import ElementTree, Element, SubElement
-from lxml import etree
 from datetime import datetime, timezone
+
+from lxml import etree
+from lxml.etree import Element, ElementTree, SubElement
+
 try:
-    from urllib.parse import urlencode, quote, unquote
+    from urllib.parse import quote, unquote, urlencode
 except ImportError:
     from urllib import quote, unquote, urlencode
 try:
@@ -11,23 +13,24 @@ except ImportError:
     from urlparse import parse_qs
 import sys
 
-from oaipmh import common, metadata, validation, error
+from oaipmh import common, error, metadata, validation
 from oaipmh.datestamp import (
     DatestampError,
     datestamp_to_datetime,
     datetime_to_datestamp,
 )
 
-NS_OAIPMH = 'http://www.openarchives.org/OAI/2.0/'
-NS_XSI = 'http://www.w3.org/2001/XMLSchema-instance'
-NS_OAIDC = 'http://www.openarchives.org/OAI/2.0/oai_dc/'
+NS_OAIPMH = "http://www.openarchives.org/OAI/2.0/"
+NS_XSI = "http://www.w3.org/2001/XMLSchema-instance"
+NS_OAIDC = "http://www.openarchives.org/OAI/2.0/oai_dc/"
 NS_DC = "http://purl.org/dc/elements/1.1/"
 
 NSMAP = {
     None: NS_OAIPMH,
-    }
+}
 
-class XMLTreeServer(object):
+
+class XMLTreeServer:
     """A server that responds to messages by returning XML trees.
 
     This is an implementation class that normally would not be exposed
@@ -35,23 +38,22 @@ class XMLTreeServer(object):
 
     Takes a server object conforming to the ResumptionOAIPMH interface.
     """
+
     def __init__(self, server, metadata_registry, nsmap=None):
         if nsmap is None:
             nsmap = {}
         self._nsmap = NSMAP.copy()
         self._nsmap.update(nsmap)
         self._server = server
-        self._metadata_registry = (
-            metadata_registry or metadata.global_metadata_registry)
-        
+        self._metadata_registry = metadata_registry or metadata.global_metadata_registry
+
     def getRecord(self, **kw):
-        envelope, e_getRecord = self._outputEnvelope(
-            verb='GetRecord', **kw)
+        envelope, e_getRecord = self._outputEnvelope(verb="GetRecord", **kw)
         header, metadata, about = self._server.getRecord(**kw)
-        e_record = SubElement(e_getRecord, nsoai('record'))
-        self._outputHeader(e_record, header)   
+        e_record = SubElement(e_getRecord, nsoai("record"))
+        self._outputHeader(e_record, header)
         if not header.isDeleted():
-            self._outputMetadata(e_record, kw['metadataPrefix'], metadata)
+            self._outputMetadata(e_record, kw["metadataPrefix"], metadata)
         return envelope
 
     def getMetadata(self, **kw):
@@ -59,155 +61,153 @@ class XMLTreeServer(object):
         the first element below the oai:metadata element"""
         envelope = self.getRecord(**kw)
         metadata = envelope.xpath(
-            '//oai:metadata/node()[1]', namespaces={'oai': NS_OAIPMH})
+            "//oai:metadata/node()[1]", namespaces={"oai": NS_OAIPMH}
+        )
         return metadata[0]
-        
+
     def identify(self):
-        envelope, e_identify = self._outputEnvelope(verb='Identify')
+        envelope, e_identify = self._outputEnvelope(verb="Identify")
         identify = self._server.identify()
-        e_repositoryName = SubElement(e_identify, nsoai('repositoryName'))
+        e_repositoryName = SubElement(e_identify, nsoai("repositoryName"))
         e_repositoryName.text = identify.repositoryName()
-        e_baseURL = SubElement(e_identify, nsoai('baseURL'))
+        e_baseURL = SubElement(e_identify, nsoai("baseURL"))
         e_baseURL.text = identify.baseURL()
-        e_protocolVersion = SubElement(e_identify, nsoai('protocolVersion'))
+        e_protocolVersion = SubElement(e_identify, nsoai("protocolVersion"))
         e_protocolVersion.text = identify.protocolVersion()
         for adminEmail in identify.adminEmails():
-            e = SubElement(e_identify, nsoai('adminEmail'))
+            e = SubElement(e_identify, nsoai("adminEmail"))
             e.text = adminEmail
-        e_earliestDatestamp = SubElement(e_identify,
-                                         nsoai('earliestDatestamp'))
-        e_earliestDatestamp.text = datetime_to_datestamp(
-            identify.earliestDatestamp())
-        e_deletedRecord = SubElement(e_identify,
-                                     nsoai('deletedRecord'))
+        e_earliestDatestamp = SubElement(e_identify, nsoai("earliestDatestamp"))
+        e_earliestDatestamp.text = datetime_to_datestamp(identify.earliestDatestamp())
+        e_deletedRecord = SubElement(e_identify, nsoai("deletedRecord"))
         e_deletedRecord.text = identify.deletedRecord()
-        e_granularity = SubElement(e_identify, nsoai('granularity'))
+        e_granularity = SubElement(e_identify, nsoai("granularity"))
         e_granularity.text = identify.granularity()
         compressions = identify.compression()
-        if compressions != ['identity']:
+        if compressions != ["identity"]:
             for compression in compressions:
-                e_compression = SubElement(e_identify, nsoai('compression'))
+                e_compression = SubElement(e_identify, nsoai("compression"))
                 e_compression.text = compression
 
         for description in identify.descriptions():
-            e_description = SubElement(e_identify, nsoai('description'))
+            e_description = SubElement(e_identify, nsoai("description"))
             e_description.append(etree.fromstring(description))
         return envelope
 
     def listMetadataFormats(self, **kw):
         envelope, e_listMetadataFormats = self._outputEnvelope(
-            verb="ListMetadataFormats", **kw)
-        for (metadataPrefix, schema,
-             metadataNamespace) in self._server.listMetadataFormats(**kw):
-            e_metadataFormat = SubElement(e_listMetadataFormats,
-                                          nsoai('metadataFormat'))
-            e_metadataPrefix = SubElement(e_metadataFormat,
-                                          nsoai('metadataPrefix'))
+            verb="ListMetadataFormats", **kw
+        )
+        for (
+            metadataPrefix,
+            schema,
+            metadataNamespace,
+        ) in self._server.listMetadataFormats(**kw):
+            e_metadataFormat = SubElement(
+                e_listMetadataFormats, nsoai("metadataFormat")
+            )
+            e_metadataPrefix = SubElement(e_metadataFormat, nsoai("metadataPrefix"))
             e_metadataPrefix.text = metadataPrefix
-            e_schema = SubElement(e_metadataFormat,
-                                  nsoai('schema'))
+            e_schema = SubElement(e_metadataFormat, nsoai("schema"))
             e_schema.text = schema
-            e_metadataNamespace = SubElement(e_metadataFormat,
-                                             nsoai('metadataNamespace'))
+            e_metadataNamespace = SubElement(
+                e_metadataFormat, nsoai("metadataNamespace")
+            )
             e_metadataNamespace.text = metadataNamespace
-        return envelope            
+        return envelope
 
     def listIdentifiers(self, **kw):
-        envelope, e_listIdentifiers = self._outputEnvelope(
-            verb='ListIdentifiers', **kw)
+        envelope, e_listIdentifiers = self._outputEnvelope(verb="ListIdentifiers", **kw)
+
         def outputFunc(element, headers, token_kw):
             for header in headers:
                 self._outputHeader(element, header)
+
         self._outputResuming(
-            e_listIdentifiers,
-            self._server.listIdentifiers,
-            outputFunc,
-            kw)
+            e_listIdentifiers, self._server.listIdentifiers, outputFunc, kw
+        )
         return envelope
-    
+
     def listRecords(self, **kw):
-        envelope, e_listRecords = self._outputEnvelope(
-            verb="ListRecords", **kw)
+        envelope, e_listRecords = self._outputEnvelope(verb="ListRecords", **kw)
+
         def outputFunc(element, records, token_kw):
-            metadataPrefix = token_kw['metadataPrefix']
+            metadataPrefix = token_kw["metadataPrefix"]
             for header, record_metadata, _about in records:
-                e_record = SubElement(e_listRecords, nsoai('record'))
+                e_record = SubElement(e_listRecords, nsoai("record"))
                 self._outputHeader(e_record, header)
                 if not header.isDeleted():
-                    self._outputMetadata(
-                        e_record, metadataPrefix, record_metadata)
+                    self._outputMetadata(e_record, metadataPrefix, record_metadata)
                 # XXX about
-        self._outputResuming(
-            e_listRecords,
-            self._server.listRecords,
-            outputFunc,
-            kw)
+
+        self._outputResuming(e_listRecords, self._server.listRecords, outputFunc, kw)
         return envelope
 
     def listSets(self, **kw):
-        envelope, e_listSets = self._outputEnvelope(
-            verb='ListSets', **kw)
+        envelope, e_listSets = self._outputEnvelope(verb="ListSets", **kw)
+
         def outputFunc(element, sets, token_kw):
             for setSpec, setName, _setDescription in sets:
-                e_set = SubElement(e_listSets, nsoai('set'))
-                e_setSpec = SubElement(e_set, nsoai('setSpec'))
+                e_set = SubElement(e_listSets, nsoai("set"))
+                e_setSpec = SubElement(e_set, nsoai("setSpec"))
                 e_setSpec.text = setSpec
-                e_setName = SubElement(e_set, nsoai('setName'))
+                e_setName = SubElement(e_set, nsoai("setName"))
                 e_setName.text = setName
                 # XXX ignore setDescription
-        self._outputResuming(
-            e_listSets,
-            self._server.listSets,
-            outputFunc,
-            kw)
+
+        self._outputResuming(e_listSets, self._server.listSets, outputFunc, kw)
         return envelope
 
     def handleException(self, exception):
         if isinstance(exception, error.ErrorBase):
-            envelope = self._outputErrors(
-                [(exception.oainame(), str(exception))])
+            envelope = self._outputErrors([(exception.oainame(), str(exception))])
             return envelope
         # unhandled exception, so raise again
         raise
-    
+
     def _outputBasicEnvelope(self, **kw):
-        e_oaipmh = Element(nsoai('OAI-PMH'), nsmap=self._nsmap)
-        e_oaipmh.set('{%s}schemaLocation' % NS_XSI,
-                     ('http://www.openarchives.org/OAI/2.0/ '
-                      'http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd'))
+        e_oaipmh = Element(nsoai("OAI-PMH"), nsmap=self._nsmap)
+        e_oaipmh.set(
+            f"{{{NS_XSI}}}schemaLocation",
+            (
+                "http://www.openarchives.org/OAI/2.0/ "
+                "http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd"
+            ),
+        )
         e_tree = ElementTree(element=e_oaipmh)
-        e_responseDate = SubElement(e_oaipmh, nsoai('responseDate'))
+        e_responseDate = SubElement(e_oaipmh, nsoai("responseDate"))
         # date should be first possible moment
         e_responseDate.text = datetime_to_datestamp(
-            datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None))
-        e_request = SubElement(e_oaipmh, nsoai('request'))
+            datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None)
+        )
+        e_request = SubElement(e_oaipmh, nsoai("request"))
         for key, value in kw.items():
-            if key == 'from_':
-                key = 'from'
-            if key == 'from' or key == 'until':
+            if key == "from_":
+                key = "from"
+            if key == "from" or key == "until":
                 value = datetime_to_datestamp(value)
             e_request.set(key, value)
         # XXX this is potentially slow..
         e_request.text = self._server.identify().baseURL()
         return e_tree, e_oaipmh
-    
+
     def _outputEnvelope(self, **kw):
         e_tree, e_oaipmh = self._outputBasicEnvelope(**kw)
-        e_element = SubElement(e_oaipmh, nsoai(kw['verb']))
+        e_element = SubElement(e_oaipmh, nsoai(kw["verb"]))
         return e_tree, e_element
 
     def _outputErrors(self, errors, **kw):
         # only pass functional arguments
         e_tree, e_oaipmh = self._outputBasicEnvelope(**kw)
         for error_code, error_msg in errors:
-            e_error = SubElement(e_oaipmh, nsoai('error'))
-            e_error.set('code', error_code)
+            e_error = SubElement(e_oaipmh, nsoai("error"))
+            e_error.set("code", error_code)
             e_error.text = error_msg
         return e_tree
-    
+
     def _outputResuming(self, element, input_func, output_func, kw):
-        if 'resumptionToken' in kw:
-            resumptionToken = kw['resumptionToken']
+        if "resumptionToken" in kw:
+            resumptionToken = kw["resumptionToken"]
             result, token = input_func(resumptionToken=resumptionToken)
             # unpack keywords from resumption token
             token_kw, dummy = decodeResumptionToken(resumptionToken)
@@ -219,40 +219,41 @@ class XMLTreeServer(object):
             # but input_func (listSets) should have already raised
             # NoSetHierarchyError in that case
             if not result:
-                raise error.NoRecordsMatchError(
-                    "No records match for request.")
+                raise error.NoRecordsMatchError("No records match for request.")
             # without resumption token keys are fine
             token_kw = kw
         output_func(element, result, token_kw)
         if token is not None:
-            e_resumptionToken = SubElement(element, nsoai('resumptionToken'))
+            e_resumptionToken = SubElement(element, nsoai("resumptionToken"))
             e_resumptionToken.text = token
-            
+
     def _outputHeader(self, element, header):
-        e_header = SubElement(element, nsoai('header'))
+        e_header = SubElement(element, nsoai("header"))
         if header.isDeleted():
-            e_header.set('status', 'deleted')
-        e_identifier = SubElement(e_header, nsoai('identifier'))
+            e_header.set("status", "deleted")
+        e_identifier = SubElement(e_header, nsoai("identifier"))
         e_identifier.text = header.identifier()
-        e_datestamp = SubElement(e_header, nsoai('datestamp'))
+        e_datestamp = SubElement(e_header, nsoai("datestamp"))
         e_datestamp.text = datetime_to_datestamp(header.datestamp())
         for set in header.setSpec():
-            e = SubElement(e_header, nsoai('setSpec'))
+            e = SubElement(e_header, nsoai("setSpec"))
             e.text = set
-    
+
     def _outputMetadata(self, element, metadata_prefix, metadata):
-        e_metadata = SubElement(element, nsoai('metadata'))
+        e_metadata = SubElement(element, nsoai("metadata"))
         if not self._metadata_registry.hasWriter(metadata_prefix):
             raise error.CannotDisseminateFormatError(
-                  "Unknown metadata format: %s" % metadata_prefix)
-        self._metadata_registry.writeMetadata(
-            metadata_prefix, e_metadata, metadata)
+                f"Unknown metadata format: {metadata_prefix}"
+            )
+        self._metadata_registry.writeMetadata(metadata_prefix, e_metadata, metadata)
+
 
 class ServerBase(common.ResumptionOAIPMH):
     """A server that responds to messages by returning OAI-PMH compliant XML.
 
     Takes a server object complying with the ResumptionOAIPMH interface.
     """
+
     def __init__(self, server, metadata_registry=None, nsmap=None):
         self._tree_server = XMLTreeServer(server, metadata_registry, nsmap)
 
@@ -269,51 +270,59 @@ class ServerBase(common.ResumptionOAIPMH):
                 for key, value in request_kw.items():
                     new_kw[str(key)] = value
             except UnicodeError as err:
-                raise error.BadVerbError(
-                      "Non-ascii keys in request.") from err
+                raise error.BadVerbError("Non-ascii keys in request.") from err
             request_kw = new_kw
             try:
-                verb = request_kw.pop('verb')
+                verb = request_kw.pop("verb")
             except KeyError as err:
-                verb = 'unknown'
-                raise error.BadVerbError(
-                      "Required verb argument not found.") from err
-            if verb not in ['GetRecord', 'Identify', 'ListIdentifiers',
-                            'GetMetadata', 'ListMetadataFormats',
-                            'ListRecords', 'ListSets']:
-                raise error.BadVerbError("Illegal verb: %s" % verb)
+                verb = "unknown"
+                raise error.BadVerbError("Required verb argument not found.") from err
+            if verb not in [
+                "GetRecord",
+                "Identify",
+                "ListIdentifiers",
+                "GetMetadata",
+                "ListMetadataFormats",
+                "ListRecords",
+                "ListSets",
+            ]:
+                raise error.BadVerbError(f"Illegal verb: {verb}")
             # replace from and until arguments if necessary
-            from_ = request_kw.get('from')
+            from_ = request_kw.get("from")
             if from_ is not None:
                 # rename to from_ for internal use
                 try:
-                    request_kw['from_'] = datestamp_to_datetime(from_)
+                    request_kw["from_"] = datestamp_to_datetime(from_)
                 except DatestampError as err:
                     raise error.BadArgumentError(
-                        "The value '%s' of the argument "
-                        "'%s' is not valid." %(from_, 'from')) from err
-                del request_kw['from']
-            until = request_kw.get('until')
+                        "The value '{}' of the argument '{}' is not valid.".format(
+                            from_, "from"
+                        )
+                    ) from err
+                del request_kw["from"]
+            until = request_kw.get("until")
             if until is not None:
                 try:
-                    request_kw['until'] = datestamp_to_datetime(until,
-                                                                inclusive=True)
+                    request_kw["until"] = datestamp_to_datetime(until, inclusive=True)
                 except DatestampError as err:
                     raise error.BadArgumentError(
-                        "The value '%s' of the argument "
-                        "'%s' is not valid." %(until, 'until')) from err
+                        "The value '{}' of the argument '{}' is not valid.".format(
+                            until, "until"
+                        )
+                    ) from err
 
             if (
                 from_ is not None
                 and until is not None
                 and (
-                    ('T' in from_ and 'T' not in until)
-                    or ('T' in until and 'T' not in from_)
+                    ("T" in from_ and "T" not in until)
+                    or ("T" in until and "T" not in from_)
                 )
             ):
                 raise error.BadArgumentError(
                     "The request has different granularities for"
-                    " the from and until parameters")
+                    " the from and until parameters"
+                )
 
             # now validate parameters
             try:
@@ -322,45 +331,51 @@ class ServerBase(common.ResumptionOAIPMH):
                 # have to raise this as a error.BadArgumentError
                 raise error.BadArgumentError(str(e)) from e
             # now handle verb
-            return self.handleVerb(verb, request_kw)            
+            return self.handleVerb(verb, request_kw)
         except:  # noqa: E722 — top-level OAI-PMH error funnel; narrowing risks losing protocol-level error reporting, deferred
             # in case of exception, call exception handler
             return self.handleException(request_kw, sys.exc_info())
-        
+
     def handleVerb(self, verb, kw):
         method = common.getMethodForVerb(self._tree_server, verb)
-        return etree.tostring(method(**kw).getroot(), 
-                              encoding='UTF-8',
-                              xml_declaration=True,
-                              pretty_print=True)
-  
+        return etree.tostring(
+            method(**kw).getroot(),
+            encoding="UTF-8",
+            xml_declaration=True,
+            pretty_print=True,
+        )
+
     def handleException(self, kw, exc_info):
         type, value, traceback = exc_info
         return etree.tostring(
             self._tree_server.handleException(value).getroot(),
-            encoding='UTF-8',
+            encoding="UTF-8",
             xml_declaration=True,
-            pretty_print=True)
+            pretty_print=True,
+        )
+
 
 class Server(ServerBase):
-    """Expects to be initialized with a IOAI server implementation.
-    """
-    def __init__(self, server, metadata_registry=None, nsmap=None,
-                 resumption_batch_size=10):
-        super(Server, self).__init__(
-            Resumption(server, resumption_batch_size),
-            metadata_registry,
-            nsmap)
+    """Expects to be initialized with a IOAI server implementation."""
+
+    def __init__(
+        self, server, metadata_registry=None, nsmap=None, resumption_batch_size=10
+    ):
+        super().__init__(
+            Resumption(server, resumption_batch_size), metadata_registry, nsmap
+        )
+
 
 class BatchingServer(ServerBase):
-    """Expects to be initialized with a IBatchingOAI server implementation.
-    """
-    def __init__(self, server, metadata_registry=None, nsmap=None,
-                 resumption_batch_size=10):
-        super(BatchingServer, self).__init__(
-            BatchingResumption(server, resumption_batch_size),
-            metadata_registry,
-            nsmap)
+    """Expects to be initialized with a IBatchingOAI server implementation."""
+
+    def __init__(
+        self, server, metadata_registry=None, nsmap=None, resumption_batch_size=10
+    ):
+        super().__init__(
+            BatchingResumption(server, resumption_batch_size), metadata_registry, nsmap
+        )
+
 
 class Resumption(common.ResumptionOAIPMH):
     """
@@ -371,25 +386,24 @@ class Resumption(common.ResumptionOAIPMH):
     result sets, as the complete result set needs to be reconstructed each
     time.
     """
+
     def __init__(self, server, batch_size=10):
         self._server = server
         self._batch_size = batch_size
-    
+
     def handleVerb(self, verb, kw):
         # do original query
         method = common.getMethodForVerb(self._server, verb)
         # if we're handling a resumption token
-        if 'resumptionToken' in kw:
-            kw, cursor = decodeResumptionToken(
-                kw['resumptionToken'])
+        if "resumptionToken" in kw:
+            kw, cursor = decodeResumptionToken(kw["resumptionToken"])
             end_batch = cursor + self._batch_size
             # do query again with original parameters
             result = method(**kw)
             # XXX defeat laziness of any generators..
             result = list(result)
             if end_batch < len(result):
-                resumptionToken = encodeResumptionToken(
-                    kw, end_batch)
+                resumptionToken = encodeResumptionToken(kw, end_batch)
             else:
                 resumptionToken = None
             return result[cursor:end_batch], resumptionToken
@@ -398,52 +412,50 @@ class Resumption(common.ResumptionOAIPMH):
         result = method(**kw)
 
         # now handle resumption system
-        if verb in ['ListSets', 'ListIdentifiers', 'ListRecords']:
+        if verb in ["ListSets", "ListIdentifiers", "ListRecords"]:
             # XXX defeat the laziness effect of any generators..
             result = list(result)
             end_batch = self._batch_size
             if end_batch < len(result):
-                resumptionToken = encodeResumptionToken(
-                    kw, end_batch)
+                resumptionToken = encodeResumptionToken(kw, end_batch)
             else:
                 resumptionToken = None
             return result[0:end_batch], resumptionToken
         return result
+
 
 class BatchingResumption(common.ResumptionOAIPMH):
     """
     The BatchingResumption class can turn a IBatchingOAIPMH interface into
     a ResumptionOAIPMH interface.
     """
-    
+
     def __init__(self, server, batch_size=10):
         self._server = server
         self._batch_size = batch_size
-        
+
     def handleVerb(self, verb, kw):
-        if 'resumptionToken' in kw:
-            kw, cursor = decodeResumptionToken(
-                kw['resumptionToken'])
-            kw['cursor'] = cursor
-            
+        if "resumptionToken" in kw:
+            kw, cursor = decodeResumptionToken(kw["resumptionToken"])
+            kw["cursor"] = cursor
+
         method = common.getMethodForVerb(self._server, verb)
 
         # now handle resumption system
-        if verb in ['ListSets', 'ListIdentifiers', 'ListRecords']:
+        if verb in ["ListSets", "ListIdentifiers", "ListRecords"]:
             kw = kw.copy()
-            cursor = kw.get('cursor', None)
+            cursor = kw.get("cursor", None)
             if cursor is None:
-                kw['cursor'] = cursor = 0
+                kw["cursor"] = cursor = 0
             # we request 1 beyond the batch size, so that
             # if we retrieve <= batch_size items, we know we
             # don't need to output another resumption token
-            kw['batch_size'] = self._batch_size + 1  
+            kw["batch_size"] = self._batch_size + 1
             result = method(**kw)
             result = list(result)
             if len(result) > self._batch_size:
                 # more results are expected, so encode resumption token
-                resumptionToken = encodeResumptionToken(
-                    kw, cursor + self._batch_size)
+                resumptionToken = encodeResumptionToken(kw, cursor + self._batch_size)
                 # we also want to result only the batch_size, so pop the
                 # last one
                 result.pop()
@@ -452,60 +464,84 @@ class BatchingResumption(common.ResumptionOAIPMH):
                 resumptionToken = None
             return result, resumptionToken
         return method(**kw)
-    
+
+
 def encodeResumptionToken(kw, cursor):
     kw = kw.copy()
-    kw['cursor'] = str(cursor)
-    from_ = kw.get('from_')
+    kw["cursor"] = str(cursor)
+    from_ = kw.get("from_")
     if from_ is not None:
-        kw['from_'] = datetime_to_datestamp(from_)
-    until = kw.get('until')
+        kw["from_"] = datetime_to_datestamp(from_)
+    until = kw.get("until")
     if until is not None:
-        kw['until'] = datetime_to_datestamp(until)
+        kw["until"] = datetime_to_datestamp(until)
     return quote(urlencode(kw))
+
 
 def decodeResumptionToken(token):
     token = str(unquote(token))
-    
+
     try:
         kw = parse_qs(token, True, True)
     except ValueError as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token: %s" % token) from err
+            f"Unable to decode resumption token: {token}"
+        ) from err
     result = {}
     for key, value in kw.items():
         value = value[0]
-        if key == 'from_' or key == 'until':
+        if key == "from_" or key == "until":
             value = datestamp_to_datetime(value)
         result[key] = value
     try:
-        cursor = int(result.pop('cursor'))
+        cursor = int(result.pop("cursor"))
     except (KeyError, ValueError) as err:
         raise error.BadResumptionTokenError(
-              "Unable to decode resumption token (bad cursor): %s" % token) from err
+            f"Unable to decode resumption token (bad cursor): {token}"
+        ) from err
     # XXX should also validate result contents. Need verb information
     # for this, and somewhat more flexible verb validation support
     return result, cursor
-    
+
+
 def oai_dc_writer(element, metadata):
-    e_dc = SubElement(element, nsoaidc('dc'),
-                      nsmap={'oai_dc': NS_OAIDC, 'dc': NS_DC, 'xsi': NS_XSI})
-    e_dc.set('{%s}schemaLocation' % NS_XSI,
-             '%s http://www.openarchives.org/OAI/2.0/oai_dc.xsd' % NS_DC)
+    e_dc = SubElement(
+        element, nsoaidc("dc"), nsmap={"oai_dc": NS_OAIDC, "dc": NS_DC, "xsi": NS_XSI}
+    )
+    e_dc.set(
+        f"{{{NS_XSI}}}schemaLocation",
+        f"{NS_DC} http://www.openarchives.org/OAI/2.0/oai_dc.xsd",
+    )
     map = metadata.getMap()
     for name in [
-        'title', 'creator', 'subject', 'description', 'publisher',
-        'contributor', 'date', 'type', 'format', 'identifier',
-        'source', 'language', 'relation', 'coverage', 'rights']:
+        "title",
+        "creator",
+        "subject",
+        "description",
+        "publisher",
+        "contributor",
+        "date",
+        "type",
+        "format",
+        "identifier",
+        "source",
+        "language",
+        "relation",
+        "coverage",
+        "rights",
+    ]:
         for value in map.get(name, []):
             e = SubElement(e_dc, nsdc(name))
             e.text = value
-               
+
+
 def nsoai(name):
-    return '{%s}%s' % (NS_OAIPMH, name)
+    return f"{{{NS_OAIPMH}}}{name}"
+
 
 def nsoaidc(name):
-    return '{%s}%s' % (NS_OAIDC, name)
+    return f"{{{NS_OAIDC}}}{name}"
+
 
 def nsdc(name):
-    return '{%s}%s' % (NS_DC, name)
+    return f"{{{NS_DC}}}{name}"
