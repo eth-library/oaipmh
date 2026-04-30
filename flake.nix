@@ -27,6 +27,9 @@
         UV_PYTHON = "${python}/bin/python3";
         UV_PYTHON_DOWNLOADS = "never";
         UV_PYTHON_PREFERENCE = "only-system";
+        shellHook = ''
+          pre-commit install --install-hooks > /dev/null 2>&1 || true
+        '';
       };
     in
     {

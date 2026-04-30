@@ -68,10 +68,17 @@ pytest
 
 The repository uses [Ruff](https://docs.astral.sh/ruff/) for linting, wired up via [pre-commit](https://pre-commit.com/) so the same checks run locally and in CI.
 
-After cloning, install the hooks once:
+If you use the Nix flake (Option A), pre-commit hooks are installed automatically when you enter the dev shell.
+
+Otherwise, install pre-commit:
 
 ```bash
 uv tool install pre-commit
+```
+
+Then install the hooks:
+
+```bash
 pre-commit install
 ```
 
