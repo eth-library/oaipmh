@@ -72,6 +72,15 @@ Run the test suite:
 pytest
 ```
 
+## CI
+
+CI runs on every push and pull request. Two jobs:
+
+- **Lint** (`lint` job): runs `pre-commit run --all-files` over the repository — same Ruff and hygiene hooks that run on every local commit.
+- **Test** (`test` job): runs `uv run pytest` once per supported Python version, in parallel. Versions are isolated (`fail-fast: false`) so a regression on one row doesn't mask others.
+
+Both jobs run inside Nix devShells declared in `flake.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from that file — the same source contributors use locally.
+
 ## Style
 
 The repository uses [Ruff](https://docs.astral.sh/ruff/) for linting, wired up via [pre-commit](https://pre-commit.com/) so the same checks run locally and in CI.
