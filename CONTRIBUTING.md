@@ -50,11 +50,13 @@ uv run pytest
 
 Standard Python tooling works with no additional prerequisites beyond a Python 3.10+ interpreter.
 
-Create and activate a virtual environment:
+Create the virtual environment:
 
 ```bash
 python3 -m venv .venv
 ```
+
+Activate it:
 
 ```bash
 source .venv/bin/activate
