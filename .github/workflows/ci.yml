@@ -18,6 +18,14 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7.0.2
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-prefixes-first-match: |
+            nix-${{ runner.os }}-${{ hashFiles('flake.lock') }}-
+            nix-${{ runner.os }}-
+
       - name: Run pre-commit
         run: nix develop .#default --command pre-commit run --all-files --show-diff-on-failure
 
@@ -60,6 +68,14 @@ jobs:
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
+
+      - name: Cache Nix store
+        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7.0.2
+        with:
+          primary-key: nix-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('flake.lock') }}-${{ hashFiles('.github/workflows/ci.yml') }}
+          restore-prefixes-first-match: |
+            nix-${{ runner.os }}-${{ matrix.python }}-${{ hashFiles('flake.lock') }}-
+            nix-${{ runner.os }}-${{ matrix.python }}-
 
       - name: Sync dependencies
         run: nix develop .#${{ matrix.python }} --command uv sync --extra test
