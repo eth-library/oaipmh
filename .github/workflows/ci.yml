@@ -12,33 +12,34 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
-
-      - name: Install Python 3.14
-        run: uv python install 3.14
-
-      - name: Install pre-commit
-        run: uv tool install pre-commit
+      - name: Install Nix
+        uses: cachix/install-nix-action@ab739621df7a23f52766f9ccc97f38da6b7af14f # v31.10.5
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
 
       - name: Run pre-commit
-        run: pre-commit run --all-files --show-diff-on-failure
+        run: nix develop .#default --command pre-commit run --all-files --show-diff-on-failure
 
   test:
     runs-on: ubuntu-24.04
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python: [py310, py311, py312, py313, py314]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+      - name: Install Nix
+        uses: cachix/install-nix-action@ab739621df7a23f52766f9ccc97f38da6b7af14f # v31.10.5
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
 
-      - name: Install Python ${{ matrix.python-version }} and dependencies
-        run: uv sync --python ${{ matrix.python-version }} --extra test
+      - name: Sync dependencies
+        run: nix develop .#${{ matrix.python }} --command uv sync --extra test
 
       - name: Run tests
-        run: uv run pytest
+        run: nix develop .#${{ matrix.python }} --command uv run pytest
