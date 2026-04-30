@@ -6,14 +6,20 @@ Thank you for your interest in contributing to `oaipmh`. Bug reports, feature pr
 
 Three setup paths are supported, in order of preference.
 
-### Option A — Nix flake with direnv (recommended)
+### Option A — Nix flake (recommended)
 
-The repository ships a reproducible [Nix](https://nixos.org/) flake with [direnv](https://direnv.net/) integration. This provisions the correct Python, [`uv`](https://docs.astral.sh/uv/), and system dependencies automatically.
+The repository ships a reproducible [Nix](https://nixos.org/) flake providing Python, [`uv`](https://docs.astral.sh/uv/), and system dependencies.
 
-Activate the environment the first time you enter the repository:
+With [direnv](https://direnv.net/) — the shell auto-loads on `cd`:
 
 ```bash
 direnv allow
+```
+
+Without direnv — manual entry per shell session:
+
+```bash
+nix develop
 ```
 
 Run the test suite:
