@@ -60,7 +60,18 @@
         UV_PYTHON_DOWNLOADS = "never";
         UV_PYTHON_PREFERENCE = "only-system";
         shellHook = ''
-          pre-commit install --install-hooks > /dev/null 2>&1 || true
+          # Surface pre-commit install failures and core.hooksPath conflicts.
+          # Zero output on the healthy path; enforcement lives in CI.
+          if git rev-parse --git-dir >/dev/null 2>&1; then
+            hooks_path="$(git config --get core.hooksPath 2>/dev/null || true)"
+            if [ -n "$hooks_path" ]; then
+              echo "flake shellHook: warning — git core.hooksPath='$hooks_path'; pre-commit hooks may not fire as expected. Run 'git config --unset core.hooksPath' to restore default routing." >&2
+            fi
+            if ! out="$(pre-commit install --install-hooks 2>&1)"; then
+              echo "flake shellHook: pre-commit install failed:" >&2
+              printf '%s\n' "$out" >&2
+            fi
+          fi
         '';
       };
 
