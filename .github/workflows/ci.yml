@@ -21,13 +21,36 @@ jobs:
       - name: Run pre-commit
         run: nix develop .#default --command pre-commit run --all-files --show-diff-on-failure
 
+  matrix:
+    name: Derive Python matrix
+    runs-on: ubuntu-24.04
+
+    outputs:
+      shells: ${{ steps.derive.outputs.shells }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@ab739621df7a23f52766f9ccc97f38da6b7af14f # v31.10.5
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Derive matrix from flake's exported shell list
+        id: derive
+        run: |
+          shells=$(nix eval --json .#pythonShells)
+          echo "shells=${shells}" >> "$GITHUB_OUTPUT"
+
   test:
+    needs: matrix
     runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
-        python: [py310, py311, py312, py313, py314]
+        python: ${{ fromJson(needs.matrix.outputs.shells) }}
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
