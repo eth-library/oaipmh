@@ -82,12 +82,17 @@ pytest
 
 ## CI
 
-CI runs on every push and pull request. Two jobs:
+CI runs on every push and pull request. Two parallel tracks:
 
-- **Lint** (`lint` job): runs `pre-commit run --all-files` over the repository — same Ruff and hygiene hooks that run on every local commit.
-- **Test** (`test` job): runs `uv run pytest` once per supported Python version, in parallel. Versions are isolated (`fail-fast: false`) so a regression on one row doesn't mask others.
+```
+lint                  (independent)
+matrix ──▶ test       (test: needs: matrix; fans out per devShell)
+```
 
-Both jobs run inside Nix devShells declared in `flake.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from that file — the same source contributors use locally.
+- **Lint track** (`lint` job, independent) — runs `pre-commit run --all-files` over the repository. Same Ruff and hygiene hooks that run on every local commit.
+- **Test track** (`matrix` → `test`) — `matrix` evaluates `nix eval --json .#pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake.nix`; CI follows automatically.
+
+All three jobs run inside Nix devShells declared in `flake.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from that file — the same source contributors use locally. Both `lint` and the `test` rows cache the Nix store between runs (`nix-community/cache-nix-action`); the `matrix` job is `nix eval`-only and skips caching for now.
 
 ## Style
 
