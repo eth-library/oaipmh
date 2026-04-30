@@ -6,14 +6,20 @@ Thank you for your interest in contributing to `oaipmh`. Bug reports, feature pr
 
 Three setup paths are supported, in order of preference.
 
-### Option A — Nix flake with direnv (recommended)
+### Option A — Nix flake (recommended)
 
-The repository ships a reproducible [Nix](https://nixos.org/) flake with [direnv](https://direnv.net/) integration. This provisions the correct Python, [`uv`](https://docs.astral.sh/uv/), and system dependencies automatically.
+The repository ships a reproducible [Nix](https://nixos.org/) flake providing Python, [`uv`](https://docs.astral.sh/uv/), and system dependencies.
 
-Activate the environment the first time you enter the repository:
+With [direnv](https://direnv.net/) — the shell auto-loads on `cd`:
 
 ```bash
 direnv allow
+```
+
+Without direnv — manual entry per shell session:
+
+```bash
+nix develop
 ```
 
 Run the test suite:
@@ -21,6 +27,14 @@ Run the test suite:
 ```bash
 uv run pytest
 ```
+
+The `default` shell aliases the newest supported Python. To use a specific version's shell instead, name it explicitly:
+
+```bash
+nix develop .#py311
+```
+
+See `flake.nix` for the list of available shells.
 
 ### Option B — `uv` only
 
@@ -42,11 +56,13 @@ uv run pytest
 
 Standard Python tooling works with no additional prerequisites beyond a Python 3.10+ interpreter.
 
-Create and activate a virtual environment:
+Create the virtual environment:
 
 ```bash
 python3 -m venv .venv
 ```
+
+Activate it:
 
 ```bash
 source .venv/bin/activate
@@ -64,14 +80,35 @@ Run the test suite:
 pytest
 ```
 
+## CI
+
+CI runs on every push and pull request. Two parallel tracks:
+
+```
+lint                  (independent)
+matrix ──▶ test       (test: needs: matrix; fans out per devShell)
+```
+
+- **Lint track** (`lint` job, independent) — runs `pre-commit run --all-files` over the repository. Same Ruff and hygiene hooks that run on every local commit.
+- **Test track** (`matrix` → `test`) — `matrix` evaluates `nix eval --json .#pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake.nix`; CI follows automatically.
+
+All three jobs run inside Nix devShells declared in `flake.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from that file — the same source contributors use locally. Both `lint` and the `test` rows cache the Nix store between runs (`nix-community/cache-nix-action`); the `matrix` job is `nix eval`-only and skips caching for now.
+
 ## Style
 
 The repository uses [Ruff](https://docs.astral.sh/ruff/) for linting, wired up via [pre-commit](https://pre-commit.com/) so the same checks run locally and in CI.
 
-After cloning, install the hooks once:
+If you use the Nix flake (Option A), pre-commit hooks are installed automatically when you enter the dev shell.
+
+Otherwise, install pre-commit:
 
 ```bash
 uv tool install pre-commit
+```
+
+Then install the hooks:
+
+```bash
 pre-commit install
 ```
 
