@@ -22,6 +22,14 @@ Run the test suite:
 uv run pytest
 ```
 
+The `default` shell aliases the newest supported Python. To use a specific version's shell instead, name it explicitly:
+
+```bash
+nix develop .#py311
+```
+
+See `flake.nix` for the list of available shells.
+
 ### Option B — `uv` only
 
 If you have [`uv`](https://docs.astral.sh/uv/) installed directly and prefer not to use Nix.
