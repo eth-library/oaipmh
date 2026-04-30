@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `server.py`, and `datestamp.py` so tracebacks show the original cause
   ([Ruff `B904`](https://docs.astral.sh/ruff/rules/raise-without-from-inside-except/) /
   [PEP 3134](https://peps.python.org/pep-3134/)).
+- Build the published wheel inside the project's Nix flake devShell
+  (`publish.yml`). Pure-Python source semantics unchanged; published
+  artifact bytes may differ across releases due to build-toolchain
+  provenance.
 
 ## [3.1.0] — 2026-04-23
 
