@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`publish.yml`). Pure-Python source semantics unchanged; published
   artifact bytes may differ across releases due to build-toolchain
   provenance.
+- Centralise CI cache wiring behind composite Actions in
+  `.github/actions/`; `test` and `build` now also cache
+  `~/.cache/uv`.
 
 ## [3.1.0] — 2026-04-23
 
