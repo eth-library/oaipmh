@@ -31,3 +31,12 @@ repos:
         language: system
         files: ^flake\.(nix|lock)$
         pass_filenames: false
+      # Routes *.nix formatting through `nix fmt` (treefmt-nix wrapper).
+      # Skips silently when `nix` is missing on PATH so contributors who
+      # work without a Nix install can still run `pre-commit run --all-files`.
+      - id: treefmt
+        name: treefmt (nix fmt)
+        entry: sh -c 'command -v nix >/dev/null 2>&1 || exit 0; exec nix fmt -- "$@"' --
+        language: system
+        files: \.nix$
+        pass_filenames: true
