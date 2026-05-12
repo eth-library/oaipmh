@@ -10,11 +10,32 @@ let
   #   default    — optional; the row with `default = true` is the
   #                one `default` aliases.
   pythonEntries = [
-    { version = "3.10"; shell = "py310"; pythonAttr = "python310"; }
-    { version = "3.11"; shell = "py311"; pythonAttr = "python311"; }
-    { version = "3.12"; shell = "py312"; pythonAttr = "python312"; }
-    { version = "3.13"; shell = "py313"; pythonAttr = "python313"; }
-    { version = "3.14"; shell = "py314"; pythonAttr = "python314"; default = true; }
+    {
+      version = "3.10";
+      shell = "py310";
+      pythonAttr = "python310";
+    }
+    {
+      version = "3.11";
+      shell = "py311";
+      pythonAttr = "python311";
+    }
+    {
+      version = "3.12";
+      shell = "py312";
+      pythonAttr = "python312";
+    }
+    {
+      version = "3.13";
+      shell = "py313";
+      pythonAttr = "python313";
+    }
+    {
+      version = "3.14";
+      shell = "py314";
+      pythonAttr = "python314";
+      default = true;
+    }
   ];
 in
 {

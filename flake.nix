@@ -11,13 +11,20 @@
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-    systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-    imports = [
-      ./flake/python-axis.nix
-      ./flake/devshells.nix
-      ./flake/pre-commit.nix
-      ./flake/treefmt.nix
-    ];
-  };
+  outputs =
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      imports = [
+        ./flake/python-axis.nix
+        ./flake/devshells.nix
+        ./flake/pre-commit.nix
+        ./flake/treefmt.nix
+      ];
+    };
 }
