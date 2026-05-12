@@ -89,10 +89,20 @@ lint                  (independent)
 matrix ──▶ test       (test: needs: matrix; fans out per devShell)
 ```
 
-- **Lint track** (`lint` job, independent) — runs `pre-commit run --all-files` over the repository. Same Ruff and hygiene hooks that run on every local commit.
-- **Test track** (`matrix` → `test`) — `matrix` evaluates `nix eval --json .#pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake.nix`; CI follows automatically.
+### Jobs
 
-All three jobs run inside Nix devShells declared in `flake.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from that file — the same source contributors use locally. Both `lint` and the `test` rows cache the Nix store between runs (`nix-community/cache-nix-action`); the `matrix` job is `nix eval`-only and skips caching for now.
+- **`lint`** (independent) — runs `pre-commit run --all-files` over the repository. Same Ruff and hygiene hooks that run on every local commit.
+- **`matrix` → `test`** — `matrix` evaluates `nix eval --json .#pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake.nix`; CI follows automatically.
+- **`build`** (in `publish.yml`, runs only on `release: published`) — builds the sdist + wheel inside `nix develop .#default` for publication.
+
+All jobs run inside Nix devShells declared in `flake.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from that file — the same source contributors use locally.
+
+### Composite Actions
+
+Cache wiring lives under `.github/actions/` so each workflow job calls one composite step instead of inlining the underlying Action pins:
+
+- **`setup-nix-cache`** — installs Nix and restores the per-job Nix store cache, keyed on `flake.lock`. Required input `job-name` scopes the cache per job (`lint`, `matrix`, `test-py3XX`, `build`).
+- **`setup-uv-cache`** — restores `~/.cache/uv` keyed on `uv.lock` so `uv sync` reuses previously downloaded wheels across runs. Required input `python` scopes the cache per devShell (`py3XX`, `default`).
 
 ## Style
 
