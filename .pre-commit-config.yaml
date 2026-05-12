@@ -22,3 +22,12 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: nix-flake-lock-check
+        name: nix flake lock drift check
+        entry: nix flake lock --no-update-lock-file
+        language: system
+        files: ^flake\.(nix|lock)$
+        pass_filenames: false
