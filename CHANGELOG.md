@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Centralise CI cache wiring behind composite Actions in
   `.github/actions/`; `test` and `build` now also cache
   `~/.cache/uv`.
+- Split `flake.nix` into per-concern modules under `flake/` via
+  `flake-parts`.
+- Format `*.nix` files with `nixfmt-rfc-style` (RFC 166).
+- Add a local `treefmt` `pre-commit` hook that routes `*.nix` files
+  through `nix fmt`.
 
 ## [3.1.0] — 2026-04-23
 
