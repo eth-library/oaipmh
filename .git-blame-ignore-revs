@@ -50,3 +50,4 @@ a91f394b6aca6351969cd55679e1c794bfd9981a  # 2026-04-25 style(tests): annotate SI
 b1101287cbfbfdcb9030f2c0d7659df9363bde86  # 2026-04-25 style: apply ruff format repo-wide
 8b481b04a32ffcf25ae2f9b0b36607a4d399af50  # 2026-04-25 style: rewrite .format() calls as f-strings (UP032)
 8c18467f44a3e5adbd41b8f17c1e1d25fb83c0ce  # 2026-04-25 style: re-attach noqa comments displaced by formatter pass
+fbdfeff49ff40d17bbdb13d63a024f834a7021a3  # 2026-05-13 style(nix): apply nixfmt-rfc-style repo-wide
