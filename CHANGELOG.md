@@ -7,8 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `client.RateLimitedError` (subclass of `client.Error`) raised on HTTP
+  429 responses from `retrieveFromUrlWaiting()`. Carries
+  `retry_after_seconds` (parsed per RFC 9110 §10.2.3, accepting both
+  delta-seconds and HTTP-date forms; `None` if missing/invalid),
+  `retry_after_raw` (the verbatim header value), `code` (always `429`),
+  `headers`, `url`, and `original_error` to ease migration for callers
+  previously matching on `urllib.error.HTTPError.code`. Raised via
+  `raise ... from e` so the original exception is preserved on
+  `__cause__`.
+- Internal `_parse_retry_after()` and `_get_response_header()` helpers
+  in `client.py` (the latter normalises `HTTPError.headers` vs `.hdrs`
+  across Python versions and is now used for the existing 503 path
+  too).
+
 ### Changed
 
+- HTTP 429 is now **always** raised as `RateLimitedError`, regardless
+  of `expected_errcodes`. Previously 429 fell through as
+  `urllib.error.HTTPError` and (if a caller added 429 to
+  `expected-errcodes`) could trigger an in-process `time.sleep` of the
+  full `Retry-After` value. Real-world 429s from sources like DOAB
+  OAPEN carry `Retry-After: 86400`, which would lock a worker for 24h
+  — surfacing as a typed exception lets callers persist deadlines or
+  escalate. 503 retry behaviour is unchanged.
 - Chain re-raised exceptions with `raise ... from` in `client.py`,
   `server.py`, and `datestamp.py` so tracebacks show the original cause
   ([Ruff `B904`](https://docs.astral.sh/ruff/rules/raise-without-from-inside-except/) /

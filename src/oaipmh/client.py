@@ -11,6 +11,8 @@ except ImportError:
 
 import base64
 import codecs
+import datetime
+import email.utils
 import time
 
 from lxml import etree
@@ -24,6 +26,95 @@ WAIT_MAX = 5
 
 class Error(Exception):
     pass
+
+
+class RateLimitedError(Error):
+    """Raised when the server returns HTTP 429 (Too Many Requests).
+
+    Carries the parsed ``Retry-After`` value so callers can decide their
+    own back-off strategy. We deliberately do NOT sleep inline for 429:
+    valid ``Retry-After`` values can be hours or days (e.g. DOAB OAPEN
+    sends 86400), which would lock a worker indefinitely.
+
+    Attributes
+    ----------
+    retry_after_seconds : int or None
+        ``Retry-After`` parsed per RFC 9110 §10.2.3 (delta-seconds OR
+        HTTP-date). ``None`` if the header was missing or unparseable.
+    retry_after_raw : str or None
+        The unmodified header value.
+    code : int
+        Always ``429``; mirrors :class:`urllib.error.HTTPError.code` to
+        ease migration for callers that previously matched on ``e.code``.
+    headers : Mapping or None
+        Response headers from the originating ``HTTPError``.
+    url : str or None
+        Request URL from the originating ``HTTPError``.
+    original_error : urllib.error.HTTPError or None
+        The exception we caught (also available as ``__cause__`` because
+        we ``raise ... from`` the original).
+    """
+
+    code = 429
+
+    def __init__(
+        self,
+        retry_after_seconds=None,
+        retry_after_raw=None,
+        message=None,
+        headers=None,
+        url=None,
+        original_error=None,
+    ):
+        self.retry_after_seconds = retry_after_seconds
+        self.retry_after_raw = retry_after_raw
+        self.headers = headers
+        self.url = url
+        self.original_error = original_error
+        super().__init__(message or "rate limited (HTTP 429)")
+
+
+def _parse_retry_after(raw):
+    """Parse ``Retry-After`` per RFC 9110 §10.2.3.
+
+    Returns an int number of seconds (>= 0), or ``None`` if the value is
+    missing or cannot be parsed. Accepts both forms:
+
+    - delta-seconds: ``"86400"`` (negative or non-numeric → ``None``)
+    - HTTP-date:     ``"Wed, 21 Oct 2099 07:28:00 GMT"`` (past → ``0``)
+    """
+    if not raw:
+        return None
+    raw = raw.strip()
+    try:
+        seconds = int(raw)
+    except ValueError:
+        seconds = None
+    if seconds is not None:
+        if seconds < 0:
+            return None
+        return seconds
+    try:
+        target = email.utils.parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        return None
+    if target is None:
+        return None
+    if target.tzinfo is None:
+        target = target.replace(tzinfo=datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.timezone.utc)
+    return max(0, int((target - now).total_seconds()))
+
+
+def _get_response_header(http_error, name):
+    """Read a header from an HTTPError across Python versions.
+
+    Newer Python exposes ``HTTPError.headers``; older code uses ``.hdrs``.
+    """
+    headers = getattr(http_error, "headers", None) or getattr(http_error, "hdrs", None)
+    if headers is None:
+        return None
+    return headers.get(name)
 
 
 class BaseClient(common.OAIPMH):
@@ -398,7 +489,15 @@ def retrieveFromUrlWaiting(
     wait_default=WAIT_DEFAULT,
     expected_errcodes={503},  # noqa: B006  # public API; mutating the default would be a caller bug, behaviour-preserving fix deferred
 ):
-    """Get text from URL, handling 503 Retry-After."""
+    """Get text from URL, handling 503 Retry-After in-process.
+
+    HTTP 429 responses are *always* raised as :class:`RateLimitedError`
+    with ``Retry-After`` parsed and exposed on the exception (regardless
+    of ``expected_errcodes``). Callers must decide their own 429
+    strategy: valid ``Retry-After`` values can be hours or days, which
+    would lock the worker if slept inline. Surfacing as data lets
+    callers persist deadlines, skip work, or escalate.
+    """
     for _i in list(range(wait_max)):
         try:
             f = urllib2.urlopen(request)
@@ -407,9 +506,18 @@ def retrieveFromUrlWaiting(
             # we successfully opened without having to wait
             break
         except urllib2.HTTPError as e:
+            if e.code == 429:
+                raw = _get_response_header(e, "Retry-After")
+                raise RateLimitedError(
+                    retry_after_seconds=_parse_retry_after(raw),
+                    retry_after_raw=raw,
+                    headers=getattr(e, "headers", None) or getattr(e, "hdrs", None),
+                    url=getattr(e, "url", None),
+                    original_error=e,
+                ) from e
             if e.code in expected_errcodes:
                 try:
-                    retryAfter = int(e.hdrs.get("Retry-After"))
+                    retryAfter = int(_get_response_header(e, "Retry-After"))
                 except TypeError:
                     retryAfter = None
                 if retryAfter is None:
