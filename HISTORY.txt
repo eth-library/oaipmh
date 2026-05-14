@@ -2,6 +2,17 @@ Changelog
 =========
 2.5.2 (unreleased)
 
+-  HTTP 429 (Too Many Requests) is now raised as
+   ``oaipmh.client.RateLimitedError`` (a subclass of
+   ``oaipmh.client.Error``), with ``Retry-After`` parsed per RFC 9110
+   and exposed as ``retry_after_seconds``/``retry_after_raw``. **This
+   is a breaking change**: callers that previously caught
+   ``urllib.error.HTTPError`` on 429 must switch to
+   ``RateLimitedError``. The exception also carries ``code = 429``,
+   ``headers``, ``url``, and ``original_error`` to ease migration.
+   Requires Python 3.2+ (uses ``datetime.timezone.utc``). 503 retry
+   behavior is unchanged.
+
 2.5.1
 
 -  Added customizable client retry policy (contributed by adimascio)

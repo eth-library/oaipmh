@@ -24,8 +24,8 @@ fakeclient.getMetadataRegistry().registerReader(
     'oai_dc', metadata.oai_dc_reader)
 
 
-def http_error(code):
-    return urllib2.HTTPError('mock-url', code, 'error', {}, None)
+def http_error(code, headers=None):
+    return urllib2.HTTPError('mock-url', code, 'error', headers or {}, None)
 
 
 class ClientTestCase(TestCase):
@@ -218,6 +218,93 @@ class ClientTestCase(TestCase):
                                           metadataPrefix='oai_dc')
                 self.assertEqual(sleep.call_count, 5)
                 sleep.assert_has_calls([mock.call(5)] * 5)
+
+    def test_429_raises_rate_limited_error_with_parsed_retry_after(self):
+        """HTTP 429 raises RateLimitedError; Retry-After delta-seconds parsed."""
+        err = http_error(429, headers={'Retry-After': '86400'})
+        with mock.patch(URLOPEN_PATH, side_effect=err):
+            with mock.patch('time.sleep') as sleep:
+                urlclient = client.Client('http://mock.me')
+                with self.assertRaises(client.RateLimitedError) as ctx:
+                    urlclient.listRecords(from_=datetime(2003, 4, 10),
+                                          metadataPrefix='oai_dc')
+        self.assertEqual(ctx.exception.code, 429)
+        self.assertEqual(ctx.exception.retry_after_seconds, 86400)
+        self.assertEqual(ctx.exception.retry_after_raw, '86400')
+        # Critical: 429 must NOT trigger in-process sleep.
+        sleep.assert_not_called()
+        # Migration attributes preserve everything urllib's HTTPError carried.
+        self.assertIs(ctx.exception.original_error, err)
+        self.assertEqual(ctx.exception.url, 'mock-url')
+        self.assertIsNotNone(ctx.exception.headers)
+
+    def test_429_raises_even_when_in_expected_errcodes(self):
+        """429 always raises RateLimitedError; expected_errcodes can't override."""
+        err = http_error(429, headers={'Retry-After': '60'})
+        with mock.patch(URLOPEN_PATH, side_effect=err):
+            with mock.patch('time.sleep') as sleep:
+                urlclient = client.Client('http://mock.me', custom_retry_policy={
+                    'expected-errcodes': {429, 503},
+                })
+                with self.assertRaises(client.RateLimitedError):
+                    urlclient.listRecords(from_=datetime(2003, 4, 10),
+                                          metadataPrefix='oai_dc')
+        sleep.assert_not_called()
+
+    def test_429_http_date_retry_after(self):
+        """RFC 9110 allows HTTP-date form; parses to (positive) seconds."""
+        err = http_error(429, headers={'Retry-After': 'Wed, 21 Oct 2099 07:28:00 GMT'})
+        with mock.patch(URLOPEN_PATH, side_effect=err):
+            urlclient = client.Client('http://mock.me')
+            with self.assertRaises(client.RateLimitedError) as ctx:
+                urlclient.listRecords(from_=datetime(2003, 4, 10),
+                                      metadataPrefix='oai_dc')
+        self.assertIsNotNone(ctx.exception.retry_after_seconds)
+        self.assertGreater(ctx.exception.retry_after_seconds, 0)
+        self.assertEqual(ctx.exception.retry_after_raw,
+                         'Wed, 21 Oct 2099 07:28:00 GMT')
+
+    def test_429_missing_retry_after(self):
+        """Missing Retry-After header -> retry_after_seconds is None."""
+        err = http_error(429, headers={})
+        with mock.patch(URLOPEN_PATH, side_effect=err):
+            urlclient = client.Client('http://mock.me')
+            with self.assertRaises(client.RateLimitedError) as ctx:
+                urlclient.listRecords(from_=datetime(2003, 4, 10),
+                                      metadataPrefix='oai_dc')
+        self.assertIsNone(ctx.exception.retry_after_seconds)
+        self.assertIsNone(ctx.exception.retry_after_raw)
+
+    def test_429_invalid_retry_after(self):
+        """Unparseable Retry-After -> retry_after_seconds is None, raw preserved."""
+        err = http_error(429, headers={'Retry-After': 'not a number'})
+        with mock.patch(URLOPEN_PATH, side_effect=err):
+            urlclient = client.Client('http://mock.me')
+            with self.assertRaises(client.RateLimitedError) as ctx:
+                urlclient.listRecords(from_=datetime(2003, 4, 10),
+                                      metadataPrefix='oai_dc')
+        self.assertIsNone(ctx.exception.retry_after_seconds)
+        self.assertEqual(ctx.exception.retry_after_raw, 'not a number')
+
+    def test_429_negative_retry_after_treated_as_invalid(self):
+        """Negative delta-seconds is malformed per RFC 9110 -> None."""
+        err = http_error(429, headers={'Retry-After': '-5'})
+        with mock.patch(URLOPEN_PATH, side_effect=err):
+            urlclient = client.Client('http://mock.me')
+            with self.assertRaises(client.RateLimitedError) as ctx:
+                urlclient.listRecords(from_=datetime(2003, 4, 10),
+                                      metadataPrefix='oai_dc')
+        self.assertIsNone(ctx.exception.retry_after_seconds)
+
+    def test_429_http_date_in_past_clamped_to_zero(self):
+        """Past HTTP-date clamps to 0 (the deadline has already passed)."""
+        err = http_error(429, headers={'Retry-After': 'Wed, 21 Oct 2001 07:28:00 GMT'})
+        with mock.patch(URLOPEN_PATH, side_effect=err):
+            urlclient = client.Client('http://mock.me')
+            with self.assertRaises(client.RateLimitedError) as ctx:
+                urlclient.listRecords(from_=datetime(2003, 4, 10),
+                                      metadataPrefix='oai_dc')
+        self.assertEqual(ctx.exception.retry_after_seconds, 0)
 
 
 def test_suite():
