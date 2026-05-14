@@ -42,8 +42,6 @@ in
   # Share the axis with sibling modules via `_module.args`.
   _module.args.pythonEntries = pythonEntries;
 
-  # Flat list projected to top-level `.#pythonShells`. CI's
-  # matrix-derivation job reads this attribute by name; do not
-  # rename without updating `ci.yml`.
-  flake.pythonShells = map (e: e.shell) pythonEntries;
+  # Flat list projected to `.#lib.pythonShells`.
+  flake.lib.pythonShells = map (e: e.shell) pythonEntries;
 }

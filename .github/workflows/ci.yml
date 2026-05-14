@@ -36,7 +36,7 @@ jobs:
       - name: Derive matrix from flake's exported shell list
         id: derive
         run: |
-          shells=$(nix eval --json .#pythonShells)
+          shells=$(nix eval --json .#lib.pythonShells)
           echo "shells=${shells}" >> "$GITHUB_OUTPUT"
 
   test:
