@@ -22,13 +22,16 @@
           UV_PYTHON_PREFERENCE = "only-system";
           shellHook = config.pre-commit.installationScript;
         };
+      # Decorate each pythonEntries row with a resolved Python derivation.
       axis = map (e: e // { python = pkgs.${e.pythonAttr}; }) pythonEntries;
+      # Build { py310 = mkShell python310; py311 = ...; } from the axis.
       byShell = lib.listToAttrs (
         map (e: {
           name = e.shell;
           value = mkShell e.python;
         }) axis
       );
+      # The axis row marked `default = true` aliases `.#default`.
       defaultEntry = lib.findFirst (e: e.default or false) null axis;
     in
     {
