@@ -7,41 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0] — 2026-05-15
+
 ### Added
 
-- `RateLimitedError`, `ServiceUnavailableError`, and `NetworkError`
-  exception classes for typed handling of HTTP 429, 503, and
-  transport-level failures. All three preserve existing `except`
-  catch sites via inheritance.
+- `RateLimitedError`, `ServiceUnavailableError`, and `NetworkError` exception classes for typed handling of HTTP 429, 503, and transport-level failures. All three preserve existing `except` catch sites via inheritance.
 - `max-inline-sleep` retry-policy key (default 300 s), configurable via `custom_retry_policy`; a 503 whose `Retry-After` exceeds the cap raises instead of sleeping inline.
 
 ### Changed
 
-- HTTP 429 raises `RateLimitedError` immediately instead of falling
-  through as a raw `HTTPError`.
+- HTTP 429 raises `RateLimitedError` immediately instead of falling through as a raw `HTTPError`.
 - `urllib.error.URLError` is caught and re-raised as `NetworkError`.
 - Replace `e.hdrs` with `e.headers` in `retrieveFromUrlWaiting()`.
-- Chain re-raised exceptions with `raise ... from` in `client.py`,
-  `server.py`, and `datestamp.py` so tracebacks show the original cause
-  ([Ruff `B904`](https://docs.astral.sh/ruff/rules/raise-without-from-inside-except/) /
-  [PEP 3134](https://peps.python.org/pep-3134/)).
-- Build the published wheel inside the project's Nix flake devShell
-  (`publish.yml`). Pure-Python source semantics unchanged; published
-  artifact bytes may differ across releases due to build-toolchain
-  provenance.
-- Centralise CI cache wiring behind composite Actions in
-  `.github/actions/`; `test` and `build` now also cache
-  `~/.cache/uv`.
-- Split `flake.nix` into per-concern modules under `flake/` via
-  `flake-parts`.
-- Format `*.nix` files with `nixfmt-rfc-style` (RFC 166).
-- Add a local `treefmt` `pre-commit` hook that routes `*.nix` files
-  through `nix fmt`.
+- Chain re-raised exceptions with `raise ... from` in `client.py`, `server.py`, and `datestamp.py` so tracebacks show the original cause ([Ruff `B904`](https://docs.astral.sh/ruff/rules/raise-without-from-inside-except/) / [PEP 3134](https://peps.python.org/pep-3134/)).
+- Build the published wheel inside the project's Nix flake devShell (`publish.yml`). Pure-Python source semantics unchanged; published artifact bytes may differ across releases due to build-toolchain provenance.
+- Development tooling and CI infrastructure improvements:
+  - `lint:` Add Ruff as the Python lint and format gate via `pre-commit` ([#18](https://github.com/eth-library/oaipmh/pull/18))
+  - `style:` Repo-wide `ruff format` pass ([#20](https://github.com/eth-library/oaipmh/pull/20))
+  - `chore:` `pre-commit` hook for `flake.lock` drift detection ([#25](https://github.com/eth-library/oaipmh/pull/25))
+  - `ci:` Nix flake devShells for CI and publish workflows ([#22](https://github.com/eth-library/oaipmh/pull/22))
+  - `ci:` Centralise Nix-store and uv-wheel caches via composite Actions ([#24](https://github.com/eth-library/oaipmh/pull/24))
+  - `refactor:` Split `flake.nix` into `flake-parts` modules; `nixfmt-rfc-style` formatting and `treefmt` hook ([#31](https://github.com/eth-library/oaipmh/pull/31))
 
 ### Deprecated
 
-- Passing 429 or 503 in a caller-supplied `expected-errcodes` set
-  now emits `DeprecationWarning`; catch the typed exceptions instead.
+- Passing 429 or 503 in a caller-supplied `expected-errcodes` set now emits `DeprecationWarning`; catch the typed exceptions instead.
 
 ## [3.1.0] — 2026-04-23
 
