@@ -12,6 +12,7 @@ except ImportError:
 import base64
 import codecs
 import time
+import warnings
 
 from lxml import etree
 
@@ -36,6 +37,8 @@ class BaseClient(common.OAIPMH):
         "retry": WAIT_MAX,
         # which HTTP codes are expected
         "expected-errcodes": {503},
+        # raise ServiceUnavailableError when Retry-After exceeds this cap (seconds)
+        "max-inline-sleep": 300,
     }
 
     def __init__(self, metadata_registry=None, custom_retry_policy=None):
@@ -45,6 +48,16 @@ class BaseClient(common.OAIPMH):
         self.retry_policy = self.default_retry_policy.copy()
         if custom_retry_policy is not None:
             self.retry_policy.update(custom_retry_policy)
+            if "expected-errcodes" in custom_retry_policy:
+                typed = {429, 503} & custom_retry_policy["expected-errcodes"]
+                if typed:
+                    codes = ", ".join(str(c) for c in sorted(typed))
+                    warnings.warn(
+                        f"expected-errcodes containing {codes} is deprecated; "
+                        f"catch RateLimitedError / ServiceUnavailableError instead",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
 
     def updateGranularity(self):
         """Update the granularity setting dependent on that the server says."""
@@ -368,6 +381,7 @@ class Client(BaseClient):
                 wait_max=self.retry_policy["retry"],
                 wait_default=self.retry_policy["wait-default"],
                 expected_errcodes=self.retry_policy["expected-errcodes"],
+                max_inline_sleep=self.retry_policy["max-inline-sleep"],
             )
 
 
@@ -397,28 +411,53 @@ def retrieveFromUrlWaiting(
     wait_max=WAIT_MAX,
     wait_default=WAIT_DEFAULT,
     expected_errcodes={503},  # noqa: B006  # public API; mutating the default would be a caller bug, behaviour-preserving fix deferred
+    max_inline_sleep=300,
 ):
-    """Get text from URL, handling 503 Retry-After."""
+    """Get text from URL, handling retryable HTTP errors.
+
+    HTTP 429 always raises ``RateLimitedError`` (no inline sleep).
+    HTTP 503 (or other codes in *expected_errcodes*) sleeps and retries
+    unless ``Retry-After`` exceeds *max_inline_sleep*, in which case
+    ``ServiceUnavailableError`` is raised.
+    ``urllib.error.URLError`` is caught and re-raised as ``NetworkError``.
+    """
     for _i in list(range(wait_max)):
         try:
             f = urllib2.urlopen(request)
             text = f.read()
             f.close()
-            # we successfully opened without having to wait
             break
         except urllib2.HTTPError as e:
+            if e.code == 429:
+                raise error.RateLimitedError(
+                    e.url,
+                    e.code,
+                    e.reason,
+                    e.headers,
+                    e.fp,
+                ) from e
+
             if e.code in expected_errcodes:
                 try:
-                    retryAfter = int(e.hdrs.get("Retry-After"))
-                except TypeError:
+                    retryAfter = int(e.headers.get("Retry-After"))
+                except (TypeError, ValueError):
                     retryAfter = None
+                if retryAfter is not None and retryAfter > max_inline_sleep:
+                    raise error.ServiceUnavailableError(
+                        e.url,
+                        e.code,
+                        e.reason,
+                        e.headers,
+                        e.fp,
+                    ) from e
                 if retryAfter is None:
                     time.sleep(wait_default)
                 else:
                     time.sleep(retryAfter)
             else:
-                # reraise any other HTTP error
                 raise
+        except urllib2.URLError as e:
+            raise error.NetworkError(str(e.reason), url_error=e) from e
     else:
         raise Error(f"Waited too often (more than {wait_max} times)")
     return text
