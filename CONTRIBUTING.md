@@ -34,7 +34,7 @@ The `default` shell aliases the newest supported Python. To use a specific versi
 nix develop .#py311
 ```
 
-See `flake.nix` for the list of available shells.
+See `flake/python-axis.nix` for the list of available shells.
 
 ### Option B — `uv` only
 
@@ -80,6 +80,16 @@ Run the test suite:
 pytest
 ```
 
+### Flake module layout
+
+The flake is split into per-concern modules under `flake/`, composed via [`flake-parts`](https://flake.parts/). `flake-parts` is a nix module that lets a flake be assembled from independent modules with a shared `perSystem` evaluation, so each concern (Python axis, devShells, formatter) lives in its own file and is imported from `flake.nix`:
+
+- **`flake/python-axis.nix`** — defines `pythonEntries`, the list of supported Python versions, and projects it to `.#lib.pythonShells` for CI's matrix job.
+- **`flake/devshells.nix`** — builds one devShell per `pythonEntries` row plus a `default` alias.
+- **`flake/treefmt.nix`** — wires `treefmt-nix` and pins `nixfmt-rfc-style` (RFC 166) as the `*.nix` formatter.
+
+Hook installation runs `pre-commit install` directly from the devshell's `shellHook`. Hook definitions live in `.pre-commit-config.yaml` so contributors who do not use Nix can edit them with the standard `pre-commit` CLI.
+
 ## CI
 
 CI runs on every push and pull request. Two parallel tracks:
@@ -92,10 +102,10 @@ matrix ──▶ test       (test: needs: matrix; fans out per devShell)
 ### Jobs
 
 - **`lint`** (independent) — runs `pre-commit run --all-files` over the repository. Same Ruff and hygiene hooks that run on every local commit.
-- **`matrix` → `test`** — `matrix` evaluates `nix eval --json .#pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake.nix`; CI follows automatically.
+- **`matrix` → `test`** — `matrix` evaluates `nix eval --json .#lib.pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake/python-axis.nix`; CI follows automatically.
 - **`build`** (in `publish.yml`, runs only on `release: published`) — builds the sdist + wheel inside `nix develop .#default` for publication.
 
-All jobs run inside Nix devShells declared in `flake.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from that file — the same source contributors use locally.
+All jobs run inside Nix devShells declared in `flake/devshells.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from those modules — the same source contributors use locally.
 
 ### Composite Actions
 
