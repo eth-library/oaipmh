@@ -7,8 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `RateLimitedError`, `ServiceUnavailableError`, and `NetworkError`
+  exception classes for typed handling of HTTP 429, 503, and
+  transport-level failures. All three preserve existing `except`
+  catch sites via inheritance.
+- `max-inline-sleep` retry-policy key (default 300 s), configurable via `custom_retry_policy`; a 503 whose `Retry-After` exceeds the cap raises instead of sleeping inline.
+
 ### Changed
 
+- HTTP 429 raises `RateLimitedError` immediately instead of falling
+  through as a raw `HTTPError`.
+- `urllib.error.URLError` is caught and re-raised as `NetworkError`.
+- Replace `e.hdrs` with `e.headers` in `retrieveFromUrlWaiting()`.
 - Chain re-raised exceptions with `raise ... from` in `client.py`,
   `server.py`, and `datestamp.py` so tracebacks show the original cause
   ([Ruff `B904`](https://docs.astral.sh/ruff/rules/raise-without-from-inside-except/) /
@@ -25,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Format `*.nix` files with `nixfmt-rfc-style` (RFC 166).
 - Add a local `treefmt` `pre-commit` hook that routes `*.nix` files
   through `nix fmt`.
+
+### Deprecated
+
+- Passing 429 or 503 in a caller-supplied `expected-errcodes` set
+  now emits `DeprecationWarning`; catch the typed exceptions instead.
 
 ## [3.1.0] — 2026-04-23
 
