@@ -22,6 +22,8 @@
           # `git rev-parse` guard skips installation when entered
           # outside a checkout (e.g. `nix develop github:…`).
           shellHook = ''
+            # Prevent Nix Python setup hooks from overriding uv's `.venv`.
+            unset PYTHONPATH
             if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
               pre-commit install --install-hooks >/dev/null
             fi
