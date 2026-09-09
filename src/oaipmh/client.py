@@ -352,7 +352,8 @@ class Client(BaseClient):
         self._local_file = local_file
         self._force_http_get = force_http_get
         if credentials is not None:
-            self._credentials = base64.encodestring("{}:{}".format(*credentials))
+            credential_bytes = "{}:{}".format(*credentials).encode("utf-8")
+            self._credentials = base64.b64encode(credential_bytes).decode("ascii")
         else:
             self._credentials = None
 
@@ -365,8 +366,6 @@ class Client(BaseClient):
         else:
             # XXX include From header?
             headers = {"User-Agent": "pyoai"}
-            if self._credentials is not None:
-                headers["Authorization"] = "Basic " + self._credentials.strip()
             if self._force_http_get:
                 request_url = f"{self._base_url}?{urlencode(kw)}"
                 request = urllib2.Request(request_url, headers=headers)
@@ -374,6 +373,11 @@ class Client(BaseClient):
                 binary_data = urlencode(kw).encode("utf-8")
                 request = urllib2.Request(
                     self._base_url, data=binary_data, headers=headers
+                )
+            # Avoid forwarding credentials when urllib follows redirects
+            if self._credentials is not None:
+                request.add_unredirected_header(
+                    "Authorization", "Basic " + self._credentials
                 )
 
             return retrieveFromUrlWaiting(

@@ -147,6 +147,93 @@ class ClientTestCase(TestCase):
             self.assertEqual("2003-04-10", e.kw["from"])
             self.assertEqual("2004-06-17", e.kw["until"])
 
+    @mock.patch("oaipmh.client.retrieveFromUrlWaiting", return_value=b"response")
+    def test_http_basic_authentication_post(self, retrieve):
+        urlclient = client.Client(
+            "https://mock.me", credentials=("username", "password")
+        )
+
+        self.assertEqual(b"response", urlclient.makeRequest(verb="Identify"))
+
+        request = retrieve.call_args.args[0]
+        self.assertEqual(
+            "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+            request.get_header("Authorization"),
+        )
+        self.assertEqual(b"verb=Identify", request.data)
+
+    @mock.patch("oaipmh.client.retrieveFromUrlWaiting", return_value=b"response")
+    def test_http_basic_authentication_forced_get(self, retrieve):
+        urlclient = client.Client(
+            "https://mock.me",
+            credentials=("username", "password"),
+            force_http_get=True,
+        )
+
+        self.assertEqual(b"response", urlclient.makeRequest(verb="Identify"))
+
+        request = retrieve.call_args.args[0]
+        self.assertEqual(
+            "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+            request.get_header("Authorization"),
+        )
+        self.assertEqual("https://mock.me?verb=Identify", request.full_url)
+        self.assertIsNone(request.data)
+
+    @mock.patch("oaipmh.client.retrieveFromUrlWaiting", return_value=b"response")
+    def test_request_without_credentials_omits_authorization(self, retrieve):
+        urlclient = client.Client("https://mock.me")
+
+        self.assertEqual(b"response", urlclient.makeRequest(verb="Identify"))
+
+        request = retrieve.call_args.args[0]
+        self.assertIsNone(request.get_header("Authorization"))
+
+    @mock.patch("oaipmh.client.retrieveFromUrlWaiting", return_value=b"response")
+    def test_http_basic_authentication_is_not_forwarded_on_redirect(self, retrieve):
+        urlclient = client.Client(
+            "https://source.example/oai",
+            credentials=("username", "password"),
+        )
+        urlclient.makeRequest(verb="Identify")
+
+        request = retrieve.call_args.args[0]
+        self.assertEqual(
+            "Basic dXNlcm5hbWU6cGFzc3dvcmQ=",
+            request.get_header("Authorization"),
+        )
+
+        redirected_request = urllib2.HTTPRedirectHandler().redirect_request(
+            request,
+            None,
+            302,
+            "Found",
+            {},
+            "https://redirected.example/oai",
+        )
+        self.assertIsNone(redirected_request.get_header("Authorization"))
+
+    @mock.patch("oaipmh.client.retrieveFromUrlWaiting", return_value=b"response")
+    def test_http_basic_authentication_encodes_text_credentials(self, retrieve):
+        cases = [
+            (("", ""), "Basic Og=="),
+            (("usér", "päss:word"), "Basic dXPDqXI6cMOkc3M6d29yZA=="),
+        ]
+
+        for credentials, expected_header in cases:
+            with self.subTest(credentials=credentials):
+                urlclient = client.Client(
+                    "https://mock.me",
+                    credentials=credentials,
+                )
+                urlclient.makeRequest(verb="Identify")
+
+                request = retrieve.call_args.args[0]
+                self.assertEqual(
+                    expected_header,
+                    request.get_header("Authorization"),
+                )
+
     def test_no_retry_policy(self):
         """check request is not retried by default on HTTP 500 errors"""
         with mock.patch(URLOPEN_PATH, side_effect=http_error(500)):
