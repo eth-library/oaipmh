@@ -1,8 +1,18 @@
-{ pythonEntries, lib, ... }:
+{
+  pythonEntries,
+  inputs,
+  lib,
+  ...
+}:
 {
   perSystem =
-    { pkgs, ... }:
+    { pkgs, system, ... }:
     let
+      packageSets = {
+        base = pkgs;
+        python315 = inputs.nixpkgs-python315.legacyPackages.${system};
+      };
+      resolvePython = e: packageSets.${e.packageSet or "base"}.${e.pythonAttr};
       mkShell =
         python:
         pkgs.mkShell {
@@ -30,7 +40,7 @@
           '';
         };
       # Decorate each pythonEntries row with a resolved Python derivation.
-      axis = map (e: e // { python = pkgs.${e.pythonAttr}; }) pythonEntries;
+      axis = map (e: e // { python = resolvePython e; }) pythonEntries;
       # Build { py310 = mkShell python310; py311 = ...; } from the axis.
       byShell = lib.listToAttrs (
         map (e: {
