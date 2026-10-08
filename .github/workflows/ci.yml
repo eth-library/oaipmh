@@ -60,7 +60,68 @@ jobs:
           python: ${{ matrix.python }}
 
       - name: Sync dependencies
-        run: nix develop .#${{ matrix.python }} --command uv sync --frozen --extra test
+        run: nix develop .#${{ matrix.python }} --command uv sync --frozen --extra test --verbose
+
+      - name: Record locked runtime
+        run: |
+          nix develop .#${{ matrix.python }} --command uv run --no-sync python - <<'PY'
+          import sys
+          from importlib.metadata import distributions
+
+          from lxml import etree
+
+          print(f"Interpreter: {sys.executable}\n{sys.version}")
+          for dist in sorted(distributions(), key=lambda dist: dist.metadata["Name"]):
+              print(f"{dist.metadata['Name']}=={dist.version}")
+          print(f"lxml extension: {etree.__file__}")
+          PY
 
       - name: Run tests
-        run: nix develop .#${{ matrix.python }} --command uv run pytest
+        run: nix develop .#${{ matrix.python }} --command uv run --no-sync pytest
+
+      - name: Build distributions for Python 3.15 installation check
+        if: matrix.python == 'py315'
+        run: nix develop .#default --command uv build
+
+      - name: Install and exercise the wheel on Python 3.15
+        if: matrix.python == 'py315'
+        run: |
+          export WHEEL_DIR="$PWD/dist"
+          nix develop .#${{ matrix.python }} --command bash -euo pipefail <<'SHELL'
+          wheel_check=$(mktemp -d "$RUNNER_TEMP/oaipmh-wheel.XXXXXX")
+          cd "$wheel_check"
+          unset PYTHONPATH
+          uv venv --no-project --python "$UV_PYTHON" --no-python-downloads .venv
+          uv pip install --python .venv/bin/python --verbose "$WHEEL_DIR"/*.whl
+          .venv/bin/python - <<'PY'
+          import sys
+          from datetime import datetime
+          from importlib.metadata import distribution, distributions
+          from io import BytesIO
+          from pathlib import Path
+
+          from lxml import etree
+          from oaipmh import client, metadata, server
+          from oaipmh.datestamp import datestamp_to_datetime
+
+          assert sys.version_info[:2] == (3, 15), sys.version
+          print(f"Interpreter: {sys.executable}\n{sys.version}")
+          for dist in sorted(distributions(), key=lambda dist: dist.metadata["Name"]):
+              print(f"{dist.metadata['Name']}=={dist.version}")
+          dist = distribution("oaipmh")
+          print(f"Requires-Python: {dist.metadata['Requires-Python']}")
+          print(f"Installed artifact: {dist.read_text('direct_url.json')}")
+          wheel_metadata = dist.read_text("WHEEL")
+          assert "Tag: py3-none-any" in wheel_metadata, wheel_metadata
+          for module in (client, metadata, server, etree):
+              location = Path(module.__file__).resolve()
+              assert location.is_relative_to(Path(sys.prefix).resolve()), location
+              print(f"{module.__name__}: {location}")
+          assert datestamp_to_datetime("2005-07-04T14:35:10Z") == datetime(
+              2005, 7, 4, 14, 35, 10
+          )
+          tree = etree.parse(BytesIO(b"<record><identifier>example</identifier></record>"))
+          assert etree.XPath("string(/record/identifier)")(tree) == "example"
+          print("Installed-wheel runtime checks passed")
+          PY
+          SHELL
