@@ -31,6 +31,11 @@ let
       pythonAttr = "python314";
       default = true;
     }
+    {
+      version = "3.15";
+      shell = "py315";
+      pythonAttr = "python315";
+    }
   ];
   shellNames = map (e: e.shell) pythonEntries;
   defaultEntries = lib.filter (e: e.default or false) pythonEntries;
