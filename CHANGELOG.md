@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add support for [Python 3.15](https://www.python.org/downloads/release/python-3150/).
+
 ### Fixed
 
 - Prevent files from nested copies of the repository from being included in source distributions.

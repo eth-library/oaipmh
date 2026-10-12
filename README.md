@@ -15,7 +15,7 @@ Install the latest release from PyPI:
 pip install oaipmh
 ```
 
-Requires Python 3.11 or newer. Python 3.11 through 3.14 are supported.
+Requires Python 3.11 or newer. Python 3.11 through 3.15 are supported.
 
 Python 3.10 support has been removed following its [upstream end of life](https://peps.python.org/pep-0619/#lifespan). Upgrade to Python 3.11 or newer, or remain on oaipmh 3.2.1 if you still need Python 3.10.
 
@@ -53,7 +53,7 @@ No application code changes are required beyond the dependency rename. See [Why 
 
 Maintenance since the fork has focused on bringing the codebase onto current Python infrastructure while preserving behaviour for existing consumers:
 
-- Supported on Python 3.11 through 3.14; legacy Python 2 shims removed.
+- Supported on Python 3.11 through 3.15; legacy Python 2 shims removed.
 - Deprecated `datetime.utcnow()` replaced with timezone-aware alternatives.
 - Modern packaging using [PEP 621](https://peps.python.org/pep-0621/) metadata and the [Hatchling](https://hatch.pypa.io/) build backend.
 - CI pipeline rebuilt on [`uv`](https://docs.astral.sh/uv/), replacing the legacy `tox` configuration.
