@@ -28,13 +28,15 @@ Run the test suite:
 uv run pytest
 ```
 
-The `default` shell aliases the newest supported Python. To use a specific version's shell instead, name it explicitly:
+The `default` development shell uses Python 3.14. To use another supported Python version, select its named shell:
 
 ```bash
 nix develop .#py311
 ```
 
 See `flake/python-axis.nix` for the list of available shells.
+
+Python support follows the upstream lifecycle: end-of-life versions are dropped in a major release, and new versions are added after validation.
 
 ### Option B — `uv` only
 
@@ -54,7 +56,7 @@ uv run pytest
 
 ### Option C — plain `pip` and `venv`
 
-Standard Python tooling works with no additional prerequisites beyond a Python 3.10+ interpreter.
+Standard Python tooling works with no additional prerequisites beyond a Python 3.11+ interpreter.
 
 Create the virtual environment:
 
