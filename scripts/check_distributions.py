@@ -194,6 +194,8 @@ def build(bundle: Path) -> None:
     if output := os.environ.get("GITHUB_OUTPUT"):
         with open(output, "a") as stream:
             stream.write(f"shells={json.dumps(shells)}\n")
+            # Expose the version for release-specific compatibility checks
+            stream.write(f"version={project['version']}\n")
     verify(bundle)
 
 

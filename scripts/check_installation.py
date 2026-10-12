@@ -23,10 +23,16 @@ def consumer_environment() -> dict[str, str]:
     return env
 
 
-def check_wheel(
-    wheel: Path, bundle: Path, shell: str, interpreter: str, env: dict[str, str]
+def check_target(
+    target: Path | str,
+    bundle: Path,
+    shell: str,
+    interpreter: str,
+    env: dict[str, str],
+    *,
+    from_pypi: bool = False,
 ) -> None:
-    """Install one wheel and run the smoke checks in a fresh environment."""
+    """Install an artifact or index requirement in a fresh consumer environment."""
     with tempfile.TemporaryDirectory(prefix="oaipmh-consumer-") as directory:
         outside = Path(directory).resolve()
         if outside.is_relative_to(Path.cwd().resolve()):
@@ -64,11 +70,26 @@ def check_wheel(
                 "--python",
                 python,
                 "--verbose",
-                str(wheel),
+                # Bypass cached artifacts when checking the production index
+                *(
+                    ["--no-cache", "--default-index", "https://pypi.org/simple"]
+                    if from_pypi
+                    else []
+                ),
+                str(target),
             ]
         )
         # Isolated Python ignores source-path and user-site leakage
-        run([python, "-I", "check_installed_package.py", "manifest.json", shell])
+        run(
+            [
+                python,
+                "-I",
+                "check_installed_package.py",
+                "manifest.json",
+                shell,
+                *(["pypi"] if from_pypi else []),
+            ]
+        )
 
 
 def main() -> None:
@@ -76,6 +97,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", type=Path)
     parser.add_argument("shell")
+    parser.add_argument(
+        "--pypi",
+        action="store_true",
+        help="Install the exact version from production PyPI",
+    )
     args = parser.parse_args()
     bundle = args.bundle.resolve()
     manifest = verify(bundle)
@@ -83,9 +109,16 @@ def main() -> None:
         raise ValueError(f"Unsupported Python shell: {args.shell}")
     interpreter = os.environ["UV_PYTHON"]
     env = consumer_environment()
-    # Each wheel gets its own environment so one installation cannot mask another
-    for wheel in bundle_wheels(bundle):
-        check_wheel(wheel, bundle, args.shell, interpreter, env)
+    project = manifest["project"]
+    # Production mode resolves an index requirement instead of a local artifact path
+    targets = (
+        [f"{project['name']}=={project['version']}"]
+        if args.pypi
+        else bundle_wheels(bundle)
+    )
+    # Each target gets its own environment so one installation cannot mask another
+    for target in targets:
+        check_target(target, bundle, args.shell, interpreter, env, from_pypi=args.pypi)
 
 
 if __name__ == "__main__":

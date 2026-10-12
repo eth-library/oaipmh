@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add support for [Python 3.15](https://www.python.org/downloads/release/python-3150/).
 
+### Changed
+
+- Validate distributions before PyPI upload and check installations from PyPI after publication.
+
 ### Fixed
 
 - Prevent files from nested copies of the repository from being included in source distributions.
