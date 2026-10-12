@@ -84,6 +84,13 @@ def main() -> None:
     # Expected metadata travels with the exact validated distribution bundle
     manifest = json.loads(Path(sys.argv[1]).read_text())
     dist = check_installation(manifest, sys.argv[2])
+    # An index installation must not be replaced by a local wheel or direct URL
+    if (
+        len(sys.argv) > 3
+        and sys.argv[3] == "pypi"
+        and dist.read_text("direct_url.json") is not None
+    ):
+        raise ValueError("Expected an installation from the package index")
     check_behavior()
     print(f"Interpreter: {sys.executable}\n{sys.version}")
     print(f"Requires-Python: {dist.metadata['Requires-Python']}")
