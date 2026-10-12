@@ -106,7 +106,7 @@ distributions: build ──▶ install (same wheel per devShell)
 
 - **`lint`** (independent) — runs `pre-commit run --all-files` over the repository. Same Ruff and hygiene hooks that run on every local commit.
 - **`matrix` → `test`** — `matrix` evaluates `nix eval --json .#lib.pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake/python-axis.nix`; CI follows automatically.
-- **`build`** (in `publish.yml`, runs only on `release: published`) — builds the sdist + wheel inside `nix develop .#default` for publication.
+- **Publication validation** — `publish.yml` runs the distribution checks when a GitHub Release is published. Upload waits for every installation check, verifies the release tag and artifact checksums, and publishes the tested files without rebuilding.
 
 All jobs run inside Nix devShells declared in `flake/devshells.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from those modules — the same source contributors use locally.
 
@@ -202,9 +202,13 @@ Releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 The release process is:
 
-1. Merge release-bound changes into `main` as individual short-lived topic branches. Do not open a long-lived release branch; cut the release from `main` once the desired commits have landed.
-2. Tag the merge commit with `vX.Y.Z` and push the tag.
-3. Create a draft GitHub Release against the tag, using the relevant `CHANGELOG.md` section as the release notes.
-4. Review the draft release; when publishing it, the `publish.yml` workflow uploads the distribution to PyPI through [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC — no tokens stored in the repository).
+1. Merge release-bound changes into `main` as individual short-lived topic branches. Review the package version, Python requirement, changelog and release notes together, and set the release date when it is known.
+2. Require green source tests, distribution checks and lint on the final `main` revision. Review the validated bundle and its recorded revision and checksums. Twine checks package metadata and README rendering; the compatibility check for this major release verifies that installers accept Python 3.11 and reject Python 3.10.
+3. Tag that revision with `vX.Y.Z` and push the tag. Create a draft GitHub Release using the matching changelog section, then review its notes.
+4. Publish the GitHub Release to trigger `publish.yml`. It builds once, validates both wheels across supported Python versions, and uploads the original wheel and source archive through [Trusted Publishing](https://docs.pypi.org/trusted-publishers/). Only the upload job receives publishing permission.
+5. Confirm the post-publication checks pass. They compare PyPI metadata and downloaded artifact checksums, then install the exact version from PyPI in fresh environments. Inspect the rendered PyPI description as well.
+6. Investigate any failure before announcing the release. Published versions cannot be overwritten; decide separately whether a yank or corrective release is needed.
+
+Installation checks run on Linux x86-64. Developers can also run the checks locally; passing them does not establish dependency-wheel availability on other platforms. The Python 3.10 boundary check uses an installer target, not a Python 3.10 runtime.
 
 The fork jumped directly from `2.5.2pre` (an unreleased development version under the upstream `pyoai` distribution name) to `3.0.0` because the PyPI distribution was renamed from `pyoai` to `oaipmh` and the minimum supported Python version was raised to 3.10 — both of which are breaking changes under SemVer.
