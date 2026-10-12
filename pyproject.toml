@@ -58,13 +58,14 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.sdist]
+# Root anchors prevent similarly named files in nested checkouts from being included
 include = [
-    "src/oaipmh",
-    "pyproject.toml",
-    "README.md",
-    "LICENSE",
-    "CHANGELOG.md",
-    "CONTRIBUTING.md",
+    "/src/oaipmh",
+    "/pyproject.toml",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/CONTRIBUTING.md",
 ]
 exclude = [
     "src/oaipmh/tests",
