@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove Python 3.10 support following its upstream end of life; require Python 3.11 or newer.
+
 ## [3.2.1] — 2026-09-09
 
 ### Fixed
