@@ -5,7 +5,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
+  distributions:
+    uses: ./.github/workflows/validate-distributions.yml
+
   lint:
     runs-on: ubuntu-24.04
 
