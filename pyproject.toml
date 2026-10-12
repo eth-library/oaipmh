@@ -7,7 +7,7 @@ name = "oaipmh"
 version = "3.2.1"
 description = "Python implementation of the Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH)"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSD-3-Clause"
 authors = [
     { name = "Infrae", email = "info@infrae.com" },
@@ -20,7 +20,6 @@ dependencies = ["lxml"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -44,10 +43,12 @@ test = ["pytest"]
 testpaths = ["src/oaipmh/tests"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
+# Keep existing timezone.utc spelling while raising the compatibility target
+ignore = ["UP017"]
 select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
 
 [tool.hatch.build.targets.wheel]

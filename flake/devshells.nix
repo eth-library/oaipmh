@@ -31,7 +31,7 @@
         };
       # Decorate each pythonEntries row with a resolved Python derivation.
       axis = map (e: e // { python = pkgs.${e.pythonAttr}; }) pythonEntries;
-      # Build { py310 = mkShell python310; py311 = ...; } from the axis.
+      # Build named development shells from the supported Python axis
       byShell = lib.listToAttrs (
         map (e: {
           name = e.shell;
