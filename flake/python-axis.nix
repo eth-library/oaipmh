@@ -32,11 +32,22 @@ let
       default = true;
     }
   ];
+  shellNames = map (e: e.shell) pythonEntries;
+  defaultEntries = lib.filter (e: e.default or false) pythonEntries;
+  # Reject ambiguous shell names or defaults before deriving the CI matrix
+  checkedEntries =
+    assert lib.assertMsg (
+      builtins.length shellNames == builtins.length (lib.unique shellNames)
+    ) "Python axis shell names must be unique";
+    assert lib.assertMsg (
+      builtins.length defaultEntries == 1
+    ) "Python axis must have exactly one default row";
+    pythonEntries;
 in
 {
   # Share the axis with sibling modules via `_module.args`.
-  _module.args.pythonEntries = pythonEntries;
+  _module.args.pythonEntries = checkedEntries;
 
   # Flat list projected to `.#lib.pythonShells`.
-  flake.lib.pythonShells = map (e: e.shell) pythonEntries;
+  flake.lib.pythonShells = map (e: e.shell) checkedEntries;
 }
