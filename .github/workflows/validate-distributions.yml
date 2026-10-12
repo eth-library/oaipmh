@@ -1,0 +1,59 @@
+name: Validate distributions
+
+on:
+  workflow_call:
+    outputs:
+      artifact-id:
+        description: Validated distribution bundle
+        value: ${{ jobs.build.outputs.artifact-id }}
+      shells:
+        description: Validated Python shell matrix
+        value: ${{ jobs.build.outputs.shells }}
+
+permissions:
+  contents: read
+
+jobs:
+  # One build supplies every consumer job through the immutable artifact ID
+  build:
+    runs-on: ubuntu-24.04
+    outputs:
+      shells: ${{ steps.build.outputs.shells }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-nix-cache
+        with:
+          job-name: distributions
+      - name: Test distribution validation failures
+        run: nix develop .#default --command uv run --frozen --extra test pytest scripts/test_distribution_checks.py
+      - name: Build and inspect wheel and source distribution
+        id: build
+        run: nix develop .#default --command python scripts/check_distributions.py build dist/validated
+      - name: Upload the distribution bundle
+        id: upload
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: distributions-${{ github.run_id }}-${{ github.run_attempt }}
+          path: dist/validated/
+          if-no-files-found: error
+
+  # Every supported interpreter installs both wheels outside the checkout
+  install:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ${{ fromJson(needs.build.outputs.shells) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup-nix-cache
+        with:
+          job-name: wheel-${{ matrix.python }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
+          path: dist/validated/
+      - name: Install and exercise both wheels outside the checkout
+        run: nix develop .#${{ matrix.python }} --command python scripts/check_installation.py dist/validated ${{ matrix.python }}

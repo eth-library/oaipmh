@@ -94,11 +94,12 @@ Hook installation runs `pre-commit install` directly from the devshell's `shellH
 
 ## CI
 
-CI runs on every push and pull request. Two parallel tracks:
+CI runs on every push and pull request. The source-test matrix is preserved alongside a separate distribution-validation workflow:
 
 ```
 lint                  (independent)
-matrix ──▶ test       (test: needs: matrix; fans out per devShell)
+matrix ──▶ test       (source suite per devShell)
+distributions: build ──▶ install (same wheel per devShell)
 ```
 
 ### Jobs
@@ -108,6 +109,22 @@ matrix ──▶ test       (test: needs: matrix; fans out per devShell)
 - **`build`** (in `publish.yml`, runs only on `release: published`) — builds the sdist + wheel inside `nix develop .#default` for publication.
 
 All jobs run inside Nix devShells declared in `flake/devshells.nix`. CI's Python interpreter, `uv`, and `pre-commit` come from those modules — the same source contributors use locally.
+
+### Installed-distribution checks
+
+CI checks the built packages and installs both the original wheel and a wheel rebuilt from the source distribution in fresh environments outside the checkout. In CI, installation checks run on Linux x86-64 for every supported Python version. Developers can also run the checks locally using the commands below.
+
+Build a validation bundle in a new directory:
+
+```bash
+nix develop .#default --command python scripts/check_distributions.py build dist/validated
+```
+
+Check installation with a supported interpreter:
+
+```bash
+nix develop .#py311 --command python scripts/check_installation.py dist/validated py311
+```
 
 ### Composite Actions
 
