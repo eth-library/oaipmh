@@ -28,7 +28,7 @@ Run the test suite:
 uv run pytest
 ```
 
-The `default` development shell uses Python 3.14. To use another supported Python version, select its named shell:
+The `default` development shell uses Python 3.15. To use another supported Python version, select its named shell:
 
 ```bash
 nix develop .#py311
