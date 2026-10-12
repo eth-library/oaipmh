@@ -29,12 +29,13 @@ let
       version = "3.14";
       shell = "py314";
       pythonAttr = "python314";
-      default = true;
     }
     {
+      # Promote the validated final runtime without changing the minimum Python
       version = "3.15";
       shell = "py315";
       pythonAttr = "python315";
+      default = true;
     }
   ];
   shellNames = map (e: e.shell) pythonEntries;
