@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] — 2026-10-12
+
+Require Python 3.11 or newer and add Python 3.15 support. Projects using Python 3.10 must upgrade Python before adopting this release.
+
 ### Added
 
 - Add support for [Python 3.15](https://www.python.org/downloads/release/python-3150/).

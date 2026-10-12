@@ -17,7 +17,7 @@ pip install oaipmh
 
 Requires Python 3.11 or newer. Python 3.11 through 3.15 are supported.
 
-Python 3.10 support has been removed following its [upstream end of life](https://peps.python.org/pep-0619/#lifespan). Upgrade to Python 3.11 or newer, or remain on oaipmh 3.2.1 if you still need Python 3.10.
+Version 4.0.0 removes Python 3.10 support after its [upstream end of life](https://peps.python.org/pep-0619/#lifespan). Upgrade to Python 3.11 or newer, or remain on oaipmh 3.2.1 if you still need Python 3.10.
 
 ## Quickstart
 
