@@ -3,7 +3,7 @@ import datetime
 from oaipmh.error import DatestampError
 
 
-def datetime_to_datestamp(dt, day_granularity=False):
+def datetime_to_datestamp(dt: datetime.datetime, day_granularity: bool = False) -> str:
     assert dt.tzinfo is None  # only accept timezone naive datetimes
     # ignore microseconds
     dt = dt.replace(microsecond=0)
@@ -14,20 +14,22 @@ def datetime_to_datestamp(dt, day_granularity=False):
 
 
 # handy utility function not used by pyoai itself yet
-def date_to_datestamp(d, day_granularity=False):
+def date_to_datestamp(d: datetime.date, day_granularity: bool = False) -> str:
     return datetime_to_datestamp(
         datetime.datetime.combine(d, datetime.time(0)), day_granularity
     )
 
 
-def datestamp_to_datetime(datestamp, inclusive=False):
+def datestamp_to_datetime(datestamp: str, inclusive: bool = False) -> datetime.datetime:
     try:
         return _datestamp_to_datetime(datestamp, inclusive)
     except ValueError as err:
         raise DatestampError(datestamp) from err
 
 
-def _datestamp_to_datetime(datestamp, inclusive=False):
+def _datestamp_to_datetime(
+    datestamp: str, inclusive: bool = False
+) -> datetime.datetime:
     splitted = datestamp.split("T")
     if len(splitted) == 2:
         d, t = splitted
@@ -48,7 +50,7 @@ def _datestamp_to_datetime(datestamp, inclusive=False):
     return datetime.datetime(int(YYYY), int(MM), int(DD), int(hh), int(mm), int(ss))
 
 
-def tolerant_datestamp_to_datetime(datestamp):
+def tolerant_datestamp_to_datetime(datestamp: str) -> datetime.datetime:
     """A datestamp to datetime that's more tolerant of diverse inputs.
 
     Not used inside pyoai itself right now, but can be used when defining
