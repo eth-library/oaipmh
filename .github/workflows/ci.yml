@@ -70,3 +70,20 @@ jobs:
 
       - name: Run tests
         run: nix develop .#${{ matrix.python }} --command uv run pytest
+
+  # Single stable check name to require before merging, independent of the Python matrix
+  required-checks:
+    needs: [distributions, lint, matrix, test]
+    # A skipped job reports success, so run even when a needed job fails or is cancelled
+    if: always()
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Fail unless every needed job succeeded
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Needed job results: ${RESULTS}"
+          for result in ${RESULTS}; do
+            [ "${result}" = success ] || exit 1
+          done
