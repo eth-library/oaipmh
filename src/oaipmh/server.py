@@ -1,17 +1,9 @@
+import sys
 from datetime import datetime, timezone
+from urllib.parse import parse_qs, quote, unquote, urlencode
 
 from lxml import etree
 from lxml.etree import Element, ElementTree, SubElement
-
-try:
-    from urllib.parse import quote, unquote, urlencode
-except ImportError:
-    from urllib import quote, unquote, urlencode
-try:
-    from urllib.parse import parse_qs
-except ImportError:
-    from urlparse import parse_qs
-import sys
 
 from oaipmh import common, error, metadata, validation
 from oaipmh.datestamp import (
