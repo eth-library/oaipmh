@@ -4,6 +4,8 @@ from oaipmh import common, error
 
 
 class FakeServerCommon:
+    _data: list[tuple[common.Header, common.Metadata | None, None]]
+
     def identify(self):
         return common.Identify(
             repositoryName="Fake",
@@ -93,7 +95,7 @@ def createFakeData():
         datestamp = datetime(year, month, day, hour, minute, second)
         data.append(
             (
-                common.Header(fake_element, str(i), datestamp, "", False),
+                common.Header(fake_element, str(i), datestamp, [], False),
                 common.Metadata(fake_element, {"title": [f"Title {i}"]}),
                 None,
             )
@@ -113,7 +115,7 @@ class BatchingFakeServer(BatchingFakeServerBase):
 
 class FakeServerWithDeletions(FakeServerBase):
     def __init__(self):
-        data = []
+        data: list[tuple[common.Header, common.Metadata | None, None]] = []
 
         for i in range(0, 12):
             # create some records in a year
@@ -124,7 +126,7 @@ class FakeServerWithDeletions(FakeServerBase):
             fake_element = None
             data.append(
                 (
-                    common.Header(fake_element, str(i), datestamp, "", False),
+                    common.Header(fake_element, str(i), datestamp, [], False),
                     common.Metadata(fake_element, {"title": [f"Title {i}"]}),
                     None,
                 )
@@ -142,7 +144,7 @@ class FakeServerWithDeletions(FakeServerBase):
             datestamp = datetime(year, month, day, 12, 35, 0)
             fake_element = None
             data.append(
-                (common.Header(fake_element, str(i), datestamp, "", True), None, None)
+                (common.Header(fake_element, str(i), datestamp, [], True), None, None)
             )
         # replace first half with deleted records
         self._data = data + self._data[6:]
