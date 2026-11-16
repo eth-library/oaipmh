@@ -7,12 +7,18 @@ import time
 import urllib.error
 import urllib.request
 import warnings
+from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Set as AbstractSet
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 from urllib.parse import urlencode
 
 from lxml import etree
 
 from oaipmh import common, error, metadata, validation
 from oaipmh.datestamp import datestamp_to_datetime, datetime_to_datestamp
+
+if TYPE_CHECKING:
+    from oaipmh.server import ServerBase
 
 WAIT_DEFAULT = 120  # two minutes
 WAIT_MAX = 5
@@ -22,10 +28,36 @@ class Error(Exception):
     pass
 
 
+_T = TypeVar("_T")
+_Record = tuple[common.Header, common.Metadata | None, None]
+_Set = tuple[str, str, None]
+
+# Functional syntax because the keys contain hyphens
+_RetryPolicy = TypedDict(
+    "_RetryPolicy",
+    {
+        "wait-default": float,
+        "retry": int,
+        "expected-errcodes": AbstractSet[int],
+        "max-inline-sleep": float,
+    },
+)
+_CustomRetryPolicy = TypedDict(
+    "_CustomRetryPolicy",
+    {
+        "wait-default": float,
+        "retry": int,
+        "expected-errcodes": AbstractSet[int],
+        "max-inline-sleep": float,
+    },
+    total=False,
+)
+
+
 class BaseClient(common.OAIPMH):
     # retry policy on error. Default is to retry request `WAIT_MAX` times
     # on HTTP 503 errors, waiting `WAIT_DEFAULT` before each retry
-    default_retry_policy = {
+    default_retry_policy: _RetryPolicy = {
         # how many seconds should we wait before each retry
         "wait-default": WAIT_DEFAULT,
         # how many times should we retry
@@ -36,9 +68,13 @@ class BaseClient(common.OAIPMH):
         "max-inline-sleep": 300,
     }
 
-    def __init__(self, metadata_registry=None, custom_retry_policy=None):
+    def __init__(
+        self,
+        metadata_registry: metadata.MetadataRegistry | None = None,
+        custom_retry_policy: _CustomRetryPolicy | None = None,
+    ) -> None:
         self._metadata_registry = metadata_registry or metadata.global_metadata_registry
-        self._ignore_bad_character_hack = 0
+        self._ignore_bad_character_hack: bool | int = 0
         self._day_granularity = False
         self.retry_policy = self.default_retry_policy.copy()
         if custom_retry_policy is not None:
@@ -54,7 +90,7 @@ class BaseClient(common.OAIPMH):
                         stacklevel=2,
                     )
 
-    def updateGranularity(self):
+    def updateGranularity(self) -> None:
         """Update the granularity setting dependent on that the server says."""
         identify = self.identify()
         granularity = identify.granularity()
@@ -65,7 +101,7 @@ class BaseClient(common.OAIPMH):
         else:
             raise Error(f"Non-standard granularity on server: {granularity}")
 
-    def handleVerb(self, verb, kw):
+    def handleVerb(self, verb: str, kw: dict[str, Any]) -> Any:
         # validate kw first
         validation.validateArguments(verb, kw)
         # encode datetimes as datestamps
@@ -90,18 +126,18 @@ class BaseClient(common.OAIPMH):
             kw, self.makeRequestErrorHandling(verb=verb, **kw)
         )
 
-    def getNamespaces(self):
+    def getNamespaces(self) -> dict[str, str]:
         """Get OAI namespaces."""
         return {"oai": "http://www.openarchives.org/OAI/2.0/"}
 
-    def getMetadataRegistry(self):
+    def getMetadataRegistry(self) -> metadata.MetadataRegistry:
         """Return the metadata registry in use.
 
         Do we want to allow the returning of the global registry?
         """
         return self._metadata_registry
 
-    def ignoreBadCharacters(self, true_or_false):
+    def ignoreBadCharacters(self, true_or_false: bool) -> None:
         """Set to ignore bad characters in UTF-8 input.
         This is a hack to get around well-formedness errors of
         input sources which *should* be in UTF-8 but for some reason
@@ -109,16 +145,16 @@ class BaseClient(common.OAIPMH):
         """
         self._ignore_bad_character_hack = true_or_false
 
-    def parse(self, xml):
+    def parse(self, xml: bytes) -> etree._Element:
         """Parse the XML to a lxml tree."""
         # XXX this is only safe for UTF-8 encoded content,
         # and we're basically hacking around non-wellformedness anyway,
         # but oh well
         if self._ignore_bad_character_hack:
-            xml = str(xml, "UTF-8", "replace")
+            text = str(xml, "UTF-8", "replace")
             # also get rid of character code 12
-            xml = xml.replace(chr(12), "?")
-            xml = xml.encode("UTF-8")
+            text = text.replace(chr(12), "?")
+            xml = text.encode("UTF-8")
         if hasattr(xml, "encode"):
             xml = xml.encode("utf-8")
         return etree.XML(xml)
@@ -126,17 +162,21 @@ class BaseClient(common.OAIPMH):
     # implementation of the various methods, delegated here by
     # handleVerb method
 
-    def GetRecord_impl(self, args, tree):
+    def GetRecord_impl(self, args: dict[str, Any], tree: etree._Element) -> _Record:
         records, token = self.buildRecords(
             args["metadataPrefix"], self.getNamespaces(), self._metadata_registry, tree
         )
         assert token is None
         return records[0]
 
-    def GetMetadata_impl(self, args, tree):
+    def GetMetadata_impl(
+        self, args: dict[str, Any], tree: etree._Element
+    ) -> etree._Element:
         return tree
 
-    def Identify_impl(self, args, tree):
+    def Identify_impl(
+        self, args: dict[str, Any], tree: etree._Element
+    ) -> common.Identify:
         namespaces = self.getNamespaces()
         evaluator = etree.XPathEvaluator(tree, namespaces=namespaces)
         identify_node = evaluator("/oai:OAI-PMH/oai:Identify")[0]
@@ -166,13 +206,15 @@ class BaseClient(common.OAIPMH):
         )
         return identify
 
-    def ListIdentifiers_impl(self, args, tree):
+    def ListIdentifiers_impl(
+        self, args: dict[str, Any], tree: etree._Element
+    ) -> Iterator[common.Header]:
         namespaces = self.getNamespaces()
 
-        def firstBatch():
+        def firstBatch() -> tuple[list[common.Header], str | None]:
             return self.buildIdentifiers(namespaces, tree)
 
-        def nextBatch(token):
+        def nextBatch(token: str) -> tuple[list[common.Header], str | None]:
             tree = self.makeRequestErrorHandling(
                 verb="ListIdentifiers", resumptionToken=token
             )
@@ -180,14 +222,16 @@ class BaseClient(common.OAIPMH):
 
         return ResumptionListGenerator(firstBatch, nextBatch)
 
-    def ListMetadataFormats_impl(self, args, tree):
+    def ListMetadataFormats_impl(
+        self, args: dict[str, Any], tree: etree._Element
+    ) -> list[tuple[str, str, str]]:
         namespaces = self.getNamespaces()
         evaluator = etree.XPathEvaluator(tree, namespaces=namespaces)
 
         metadataFormat_nodes = evaluator(
             "/oai:OAI-PMH/oai:ListMetadataFormats/oai:metadataFormat"
         )
-        metadataFormats = []
+        metadataFormats: list[tuple[str, str, str]] = []
         for metadataFormat_node in metadataFormat_nodes:
             e = etree.XPathEvaluator(metadataFormat_node, namespaces=namespaces)
             metadataPrefix = e("string(oai:metadataPrefix/text())")
@@ -198,17 +242,19 @@ class BaseClient(common.OAIPMH):
 
         return metadataFormats
 
-    def ListRecords_impl(self, args, tree):
+    def ListRecords_impl(
+        self, args: dict[str, Any], tree: etree._Element
+    ) -> Iterator[_Record]:
         namespaces = self.getNamespaces()
         metadata_prefix = args["metadataPrefix"]
         metadata_registry = self._metadata_registry
 
-        def firstBatch():
+        def firstBatch() -> tuple[list[_Record], str | None]:
             return self.buildRecords(
                 metadata_prefix, namespaces, metadata_registry, tree
             )
 
-        def nextBatch(token):
+        def nextBatch(token: str) -> tuple[list[_Record], str | None]:
             tree = self.makeRequestErrorHandling(
                 verb="ListRecords", resumptionToken=token
             )
@@ -218,13 +264,15 @@ class BaseClient(common.OAIPMH):
 
         return ResumptionListGenerator(firstBatch, nextBatch)
 
-    def ListSets_impl(self, args, tree):
+    def ListSets_impl(
+        self, args: dict[str, Any], tree: etree._Element
+    ) -> Iterator[_Set]:
         namespaces = self.getNamespaces()
 
-        def firstBatch():
+        def firstBatch() -> tuple[list[_Set], str | None]:
             return self.buildSets(namespaces, tree)
 
-        def nextBatch(token):
+        def nextBatch(token: str) -> tuple[list[_Set], str | None]:
             tree = self.makeRequestErrorHandling(verb="ListSets", resumptionToken=token)
             return self.buildSets(namespaces, tree)
 
@@ -232,14 +280,20 @@ class BaseClient(common.OAIPMH):
 
     # various helper methods
 
-    def buildRecords(self, metadata_prefix, namespaces, metadata_registry, tree):
+    def buildRecords(
+        self,
+        metadata_prefix: str,
+        namespaces: dict[str, str],
+        metadata_registry: metadata.MetadataRegistry,
+        tree: etree._Element,
+    ) -> tuple[list[_Record], str | None]:
         # first find resumption token if available
         evaluator = etree.XPathEvaluator(tree, namespaces=namespaces)
         token = evaluator("string(/oai:OAI-PMH/*/oai:resumptionToken/text())")
         if token.strip() == "":
             token = None
         record_nodes = evaluator("/oai:OAI-PMH/*/oai:record")
-        result = []
+        result: list[_Record] = []
         for record_node in record_nodes:
             record_evaluator = etree.XPathEvaluator(record_node, namespaces=namespaces)
             e = record_evaluator
@@ -249,6 +303,7 @@ class BaseClient(common.OAIPMH):
             header = buildHeader(header_node, namespaces)
             # find metadata node
             metadata_list = e("oai:metadata")
+            metadata: common.Metadata | None
             if metadata_list:
                 metadata_node = metadata_list[0]
                 # create metadata
@@ -261,7 +316,9 @@ class BaseClient(common.OAIPMH):
             result.append((header, metadata, None))
         return result, token
 
-    def buildIdentifiers(self, namespaces, tree):
+    def buildIdentifiers(
+        self, namespaces: dict[str, str], tree: etree._Element
+    ) -> tuple[list[common.Header], str | None]:
         evaluator = etree.XPathEvaluator(tree, namespaces=namespaces)
         # first find resumption token is available
         token = evaluator("string(/oai:OAI-PMH/*/oai:resumptionToken/text())")
@@ -269,13 +326,15 @@ class BaseClient(common.OAIPMH):
         if token.strip() == "":
             token = None
         header_nodes = evaluator("/oai:OAI-PMH/oai:ListIdentifiers/oai:header")
-        result = []
+        result: list[common.Header] = []
         for header_node in header_nodes:
             header = buildHeader(header_node, namespaces)
             result.append(header)
         return result, token
 
-    def buildSets(self, namespaces, tree):
+    def buildSets(
+        self, namespaces: dict[str, str], tree: etree._Element
+    ) -> tuple[list[_Set], str | None]:
         evaluator = etree.XPathEvaluator(tree, namespaces=namespaces)
         # first find resumption token if available
         token = evaluator(
@@ -284,7 +343,7 @@ class BaseClient(common.OAIPMH):
         if token.strip() == "":
             token = None
         set_nodes = evaluator("/oai:OAI-PMH/oai:ListSets/oai:set")
-        sets = []
+        sets: list[_Set] = []
         for set_node in set_nodes:
             e = etree.XPathEvaluator(set_node, namespaces=namespaces)
             # make sure we get back unicode strings instead
@@ -295,7 +354,7 @@ class BaseClient(common.OAIPMH):
             sets.append((setSpec, setName, None))
         return sets, token
 
-    def makeRequestErrorHandling(self, **kw):
+    def makeRequestErrorHandling(self, **kw: str) -> etree._Element:
         xml = self.makeRequest(**kw)
         try:
             tree = self.parse(xml)
@@ -326,33 +385,34 @@ class BaseClient(common.OAIPMH):
                 raise getattr(error, code[0].upper() + code[1:] + "Error")(msg)
         return tree
 
-    def makeRequest(self, **kw):
+    def makeRequest(self, **kw: str) -> bytes:
         raise NotImplementedError
 
 
 class Client(BaseClient):
     def __init__(
         self,
-        base_url,
-        metadata_registry=None,
-        credentials=None,
-        local_file=False,
-        force_http_get=False,
-        custom_retry_policy=None,
-    ):
+        base_url: str,
+        metadata_registry: metadata.MetadataRegistry | None = None,
+        credentials: tuple[str, str] | None = None,
+        local_file: bool = False,
+        force_http_get: bool = False,
+        custom_retry_policy: _CustomRetryPolicy | None = None,
+    ) -> None:
         BaseClient.__init__(
             self, metadata_registry, custom_retry_policy=custom_retry_policy
         )
         self._base_url = base_url
         self._local_file = local_file
         self._force_http_get = force_http_get
+        self._credentials: str | None
         if credentials is not None:
             credential_bytes = "{}:{}".format(*credentials).encode("utf-8")
             self._credentials = base64.b64encode(credential_bytes).decode("ascii")
         else:
             self._credentials = None
 
-    def makeRequest(self, **kw):
+    def makeRequest(self, **kw: str) -> bytes:
         """Either load a local XML file or actually retrieve XML from a server."""
         if self._local_file:
             with codecs.open(self._base_url, "r", "utf-8") as xmlfile:
@@ -384,7 +444,9 @@ class Client(BaseClient):
             )
 
 
-def buildHeader(header_node, namespaces):
+def buildHeader(
+    header_node: etree._Element, namespaces: dict[str, str]
+) -> common.Header:
     e = etree.XPathEvaluator(header_node, namespaces=namespaces)
     identifier = e("string(oai:identifier/text())")
     datestamp = datestamp_to_datetime(str(e("string(oai:datestamp/text())")))
@@ -393,7 +455,10 @@ def buildHeader(header_node, namespaces):
     return common.Header(header_node, identifier, datestamp, setspec, deleted)
 
 
-def ResumptionListGenerator(firstBatch, nextBatch):
+def ResumptionListGenerator(
+    firstBatch: Callable[[], tuple[Iterable[_T], str | None]],
+    nextBatch: Callable[[str], tuple[Iterable[_T], str | None]],
+) -> Iterator[_T]:
     result, token = firstBatch()
     while 1:
         itemFound = False
@@ -406,12 +471,12 @@ def ResumptionListGenerator(firstBatch, nextBatch):
 
 
 def retrieveFromUrlWaiting(
-    request,
-    wait_max=WAIT_MAX,
-    wait_default=WAIT_DEFAULT,
-    expected_errcodes={503},  # noqa: B006  # public API; mutating the default would be a caller bug, behaviour-preserving fix deferred
-    max_inline_sleep=300,
-):
+    request: urllib.request.Request,
+    wait_max: int = WAIT_MAX,
+    wait_default: float = WAIT_DEFAULT,
+    expected_errcodes: AbstractSet[int] = {503},  # noqa: B006  # public API; mutating the default would be a caller bug, behaviour-preserving fix deferred
+    max_inline_sleep: float = 300,
+) -> bytes:
     """Get text from URL, handling retryable HTTP errors.
 
     HTTP 429 always raises ``RateLimitedError`` (no inline sleep).
@@ -423,7 +488,7 @@ def retrieveFromUrlWaiting(
     for _i in list(range(wait_max)):
         try:
             f = urllib.request.urlopen(request)
-            text = f.read()
+            text: bytes = f.read()
             f.close()
             break
         except urllib.error.HTTPError as e:
@@ -437,8 +502,10 @@ def retrieveFromUrlWaiting(
                 ) from e
 
             if e.code in expected_errcodes:
+                retryAfter: int | None
                 try:
-                    retryAfter = int(e.headers.get("Retry-After"))
+                    # A missing header gives "", which int() rejects as it did None
+                    retryAfter = int(e.headers.get("Retry-After", ""))
                 except (TypeError, ValueError):
                     retryAfter = None
                 if retryAfter is not None and retryAfter > max_inline_sleep:
@@ -463,9 +530,14 @@ def retrieveFromUrlWaiting(
 
 
 class ServerClient(BaseClient):
-    def __init__(self, server, metadata_registry=None):
+    def __init__(
+        self,
+        # Quoted because ServerBase is imported only for type checking
+        server: "ServerBase",
+        metadata_registry: metadata.MetadataRegistry | None = None,
+    ) -> None:
         BaseClient.__init__(self, metadata_registry)
         self._server = server
 
-    def makeRequest(self, **kw):
+    def makeRequest(self, **kw: str) -> bytes:
         return self._server.handleRequest(kw)
