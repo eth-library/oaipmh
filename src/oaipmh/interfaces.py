@@ -1,5 +1,18 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import datetime
+    from collections.abc import Iterable
+
+    from oaipmh.common import Header, Identify, Metadata
+
+
 class IOAI:
-    def getRecord(self, metadataPrefix, identifier):
+    def getRecord(
+        self, metadataPrefix: str, identifier: str
+    ) -> tuple[Header, Metadata | None, object]:
         """Get a record for a metadataPrefix and identifier.
 
         metadataPrefix - identifies metadata set to retrieve
@@ -15,14 +28,20 @@ class IOAI:
         """
         raise NotImplementedError
 
-    def identify(self):
+    def identify(self) -> Identify:
         """Retrieve information about the repository.
 
         Returns an Identify object describing the repository.
         """
         raise NotImplementedError
 
-    def listIdentifiers(self, metadataPrefix, set=None, from_=None, until=None):
+    def listIdentifiers(
+        self,
+        metadataPrefix: str,
+        set: str | None = None,
+        from_: datetime.datetime | None = None,
+        until: datetime.datetime | None = None,
+    ) -> Iterable[Header]:
         """Get a list of header information on records.
 
         metadataPrefix - identifies metadata set to retrieve
@@ -41,7 +60,9 @@ class IOAI:
         """
         raise NotImplementedError
 
-    def listMetadataFormats(self, identifier=None):
+    def listMetadataFormats(
+        self, identifier: str | None = None
+    ) -> Iterable[tuple[str, str, str]]:
         """List metadata formats supported by repository or record.
 
         identifier - identify record for which we want to know all
@@ -60,7 +81,13 @@ class IOAI:
         """
         raise NotImplementedError
 
-    def listRecords(self, metadataPrefix, set=None, from_=None, until=None):
+    def listRecords(
+        self,
+        metadataPrefix: str,
+        set: str | None = None,
+        from_: datetime.datetime | None = None,
+        until: datetime.datetime | None = None,
+    ) -> Iterable[tuple[Header, Metadata | None, object]]:
         """Get a list of header, metadata and about information on records.
 
         metadataPrefix - identifies metadata set to retrieve
@@ -79,7 +106,7 @@ class IOAI:
         """
         raise NotImplementedError
 
-    def listSets(self):
+    def listSets(self) -> Iterable[tuple[str, str, object]]:
         """Get a list of sets in the repository.
 
         Should raise error.NoSetHierarchyError if the repository does not
@@ -100,65 +127,81 @@ class IBatchingOAI:
     requested.
     """
 
-    def getRecord(self, metadataPrefix, identifier):
+    def getRecord(
+        self, metadataPrefix: str, identifier: str
+    ) -> tuple[Header, Metadata | None, object]:
         raise NotImplementedError
 
-    def identify(self):
+    def identify(self) -> Identify:
         raise NotImplementedError
 
     def listIdentifiers(
-        self, metadataPrefix, set=None, from_=None, until=None, cursor=0, batch_size=10
-    ):
+        self,
+        metadataPrefix: str,
+        set: str | None = None,
+        from_: datetime.datetime | None = None,
+        until: datetime.datetime | None = None,
+        cursor: int = 0,
+        batch_size: int = 10,
+    ) -> Iterable[Header]:
         raise NotImplementedError
 
-    def listMetadataFormats(self, identifier=None):
+    def listMetadataFormats(
+        self, identifier: str | None = None
+    ) -> Iterable[tuple[str, str, str]]:
         raise NotImplementedError
 
     def listRecords(
-        self, metadataPrefix, set=None, from_=None, until=None, cursor=0, batch_size=10
-    ):
+        self,
+        metadataPrefix: str,
+        set: str | None = None,
+        from_: datetime.datetime | None = None,
+        until: datetime.datetime | None = None,
+        cursor: int = 0,
+        batch_size: int = 10,
+    ) -> Iterable[tuple[Header, Metadata | None, object]]:
         raise NotImplementedError
 
-    def listSets(self):
+    def listSets(self) -> Iterable[tuple[str, str, object]]:
         raise NotImplementedError
 
 
 class IIdentify:
-    def repositoryName(self):
+    def repositoryName(self) -> str:
         """Name of repository."""
         raise NotImplementedError
 
-    def baseURL(self):
+    def baseURL(self) -> str:
         """Base URL for OAI-PMH requests."""
         raise NotImplementedError
 
-    def protocolVersion(self):
+    def protocolVersion(self) -> str:
         """OAI-PMH protocol version (should always be '2.0')"""
         raise NotImplementedError
 
-    def adminEmails(self):
+    def adminEmails(self) -> list[str]:
         """List of email addresses of repository administrators."""
         raise NotImplementedError
 
-    def earliestDateStamp(self):
+    def earliestDateStamp(self) -> datetime.datetime:
         """The datetime (datestamp) of the earliest record in repository."""
         raise NotImplementedError
 
-    def deletedRecord(self):
+    def deletedRecord(self) -> str:
         """Way the repository handles deleted records.
 
         Either 'no', 'transient' or 'persistent'.
         """
         raise NotImplementedError
 
-    def granularity(self):
+    def granularity(self) -> str:
         """Datetime granularity of datestamps in repository.
 
         Either YYYY-MM-DD or YYYY-MM-DDThh:mm:ssZ
         """
         raise NotImplementedError
 
-    def compression(self):
+    def compression(self) -> list[str]:
         """List of types of compression schemes supported by repository.
 
         'identity' is the 'do-nothing' scheme.
@@ -167,21 +210,21 @@ class IIdentify:
 
 
 class IHeader:
-    def identifier(self):
+    def identifier(self) -> str:
         """Repository-unique identifier of this record."""
         raise NotImplementedError
 
-    def datestamp(self):
+    def datestamp(self) -> datetime.datetime:
         """Datetime of creation, last modification or deletion of the record.
 
         This can be used for selective harvesting.
         """
         raise NotImplementedError
 
-    def setSpec(self):
+    def setSpec(self) -> list[str]:
         """A list of sets this record is a member of."""
         raise NotImplementedError
 
-    def isDeleted(self):
+    def isDeleted(self) -> bool:
         """If true, record has been deleted."""
         raise NotImplementedError
