@@ -402,6 +402,29 @@ class DeletionTestCase(unittest.TestCase):
         self.assertEqual(None, metadata)
 
 
+class MissingMetadataTestCase(unittest.TestCase):
+    def setUp(self):
+        backend = fakeserver.FakeServer()
+        header, _metadata, about = backend._data[0]
+        # a record that is not deleted but carries no metadata
+        backend._data = [(header, None, about)]
+        metadata_registry = metadata.MetadataRegistry()
+        metadata_registry.registerWriter("oai_dc", server.oai_dc_writer)
+        self._server = server.Server(backend, metadata_registry)
+
+    def test_getRecord(self):
+        with self.assertRaisesRegex(
+            ValueError, "Record 0 is not deleted but has no metadata"
+        ):
+            self._server.getRecord(metadataPrefix="oai_dc", identifier="0")
+
+    def test_listRecords(self):
+        with self.assertRaisesRegex(
+            ValueError, "Record 0 is not deleted but has no metadata"
+        ):
+            self._server.listRecords(metadataPrefix="oai_dc")
+
+
 class NsMapTestCase(unittest.TestCase):
     def setUp(self):
         self._fakeserver = fakeserver.FakeServer()
