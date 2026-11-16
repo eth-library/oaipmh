@@ -1,9 +1,12 @@
 #
+from collections.abc import Mapping
+
+
 class BadArgumentError(Exception):
     pass
 
 
-def validate(argspec, dictionary):
+def validate(argspec: Mapping[str, str], dictionary: Mapping[str, object]) -> None:
     exclusive = None
     for arg_name, arg_type in list(argspec.items()):
         if arg_type == "exclusive":
@@ -32,7 +35,7 @@ class ValidationSpec:
     GetRecord = {"identifier": "required", "metadataPrefix": "required"}
     GetMetadata = {"identifier": "required", "metadataPrefix": "required"}
 
-    Identify = {}
+    Identify: dict[str, str] = {}
 
     ListIdentifiers = {
         "from_": "optional",
@@ -50,7 +53,7 @@ class ValidationSpec:
         "metadataPrefix": "required",
     }
 
-    ListSets = {}
+    ListSets: dict[str, str] = {}
 
 
 class ResumptionValidationSpec(ValidationSpec):
@@ -75,9 +78,9 @@ class ResumptionValidationSpec(ValidationSpec):
     }
 
 
-def validateArguments(verb, kw):
+def validateArguments(verb: str, kw: Mapping[str, object]) -> None:
     validate(getattr(ValidationSpec, verb), kw)
 
 
-def validateResumptionArguments(verb, kw):
+def validateResumptionArguments(verb: str, kw: Mapping[str, object]) -> None:
     validate(getattr(ResumptionValidationSpec, verb), kw)
