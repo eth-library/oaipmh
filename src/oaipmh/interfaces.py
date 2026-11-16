@@ -85,7 +85,9 @@ class IOAI:
         Should raise error.NoSetHierarchyError if the repository does not
         support sets.
 
-        Returns an iterable of setSpec, setName tuples (strings).
+        Returns an iterable of setSpec, setName, setDescription tuples.
+        setSpec and setName are strings; setDescription is currently
+        ignored by the server.
         """
         raise NotImplementedError
 
