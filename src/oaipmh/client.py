@@ -1,18 +1,13 @@
 # Copyright 2003, 2004, 2005 Infrae
 # Released under the BSD license (see LICENSE.txt)
 
-try:
-    import urllib.request as urllib2
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
-
-    import urllib2
-
 import base64
 import codecs
 import time
+import urllib.error
+import urllib.request
 import warnings
+from urllib.parse import urlencode
 
 from lxml import etree
 
@@ -368,10 +363,10 @@ class Client(BaseClient):
             headers = {"User-Agent": "pyoai"}
             if self._force_http_get:
                 request_url = f"{self._base_url}?{urlencode(kw)}"
-                request = urllib2.Request(request_url, headers=headers)
+                request = urllib.request.Request(request_url, headers=headers)
             else:
                 binary_data = urlencode(kw).encode("utf-8")
-                request = urllib2.Request(
+                request = urllib.request.Request(
                     self._base_url, data=binary_data, headers=headers
                 )
             # Avoid forwarding credentials when urllib follows redirects
@@ -427,11 +422,11 @@ def retrieveFromUrlWaiting(
     """
     for _i in list(range(wait_max)):
         try:
-            f = urllib2.urlopen(request)
+            f = urllib.request.urlopen(request)
             text = f.read()
             f.close()
             break
-        except urllib2.HTTPError as e:
+        except urllib.error.HTTPError as e:
             if e.code == 429:
                 raise error.RateLimitedError(
                     e.url,
@@ -460,7 +455,7 @@ def retrieveFromUrlWaiting(
                     time.sleep(retryAfter)
             else:
                 raise
-        except urllib2.URLError as e:
+        except urllib.error.URLError as e:
             raise error.NetworkError(str(e.reason), url_error=e) from e
     else:
         raise Error(f"Waited too often (more than {wait_max} times)")
