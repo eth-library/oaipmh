@@ -40,6 +40,9 @@ Issues = "https://github.com/eth-library/oaipmh/issues"
 [project.optional-dependencies]
 test = ["pytest"]
 
+[dependency-groups]
+typecheck = ["mypy", "types-lxml"]
+
 [tool.pytest.ini_options]
 testpaths = ["src/oaipmh/tests"]
 
@@ -51,6 +54,21 @@ line-length = 88
 # Keep existing timezone.utc spelling while raising the compatibility target
 ignore = ["UP017"]
 select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+
+[tool.mypy]
+strict = true
+warn_unreachable = true
+python_version = "3.11"
+files = ["src/oaipmh", "scripts"]
+enable_error_code = ["ignore-without-code"]
+
+# Tests are type-checked but need no annotations; scripts/ test modules are top-level names
+[[tool.mypy.overrides]]
+module = ["oaipmh.tests.*", "test_distribution_checks", "test_release_checks"]
+check_untyped_defs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/oaipmh"]
