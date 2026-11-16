@@ -11,12 +11,13 @@ import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from check_distributions import sha256, verify
 from check_installation import consumer_environment
 
 
-def before_publish(manifest: dict) -> None:
+def before_publish(manifest: dict[str, Any]) -> None:
     """Require the bundle to match the committed release tag being published."""
     # Uncommitted local validation bundles can never pass the publication gate
     if manifest["dirty"]:
@@ -30,7 +31,7 @@ def before_publish(manifest: dict) -> None:
     print("Release tag, package version, artifact revision, and checksums agree")
 
 
-def python_floor(bundle: Path, manifest: dict) -> None:
+def python_floor(bundle: Path, manifest: dict[str, Any]) -> None:
     """Check installer target compatibility without executing the dropped Python."""
     if manifest["project"]["requires-python"] != ">=3.11":
         raise ValueError("This boundary check requires a Python 3.11 minimum")
@@ -88,10 +89,13 @@ def python_floor(bundle: Path, manifest: dict) -> None:
 def read_url(url: str) -> bytes:
     """Read one index response or artifact with a bounded network timeout."""
     with urllib.request.urlopen(url, timeout=30) as response:
-        return response.read()
+        data: bytes = response.read()
+    return data
 
 
-def check_pypi(manifest: dict, read: Callable[[str], bytes] = read_url) -> None:
+def check_pypi(
+    manifest: dict[str, Any], read: Callable[[str], bytes] = read_url
+) -> None:
     """Compare the exact published release with the validated local artifacts."""
     project = manifest["project"]
     url = f"https://pypi.org/pypi/{project['name']}/{project['version']}/json"
@@ -136,7 +140,7 @@ def check_pypi(manifest: dict, read: Callable[[str], bytes] = read_url) -> None:
         print(f"Production PyPI artifact verified: {name} sha256:{digest}")
 
 
-def wait_for_pypi(manifest: dict) -> None:
+def wait_for_pypi(manifest: dict[str, Any]) -> None:
     """Retry briefly while the new release propagates through the index."""
     # Allow bounded index propagation after upload, then report any remaining failure
     for attempt in range(6):

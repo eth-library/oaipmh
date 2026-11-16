@@ -11,6 +11,7 @@ import zipfile
 from email.message import Message
 from email.parser import BytesParser
 from pathlib import Path
+from typing import Any
 
 
 def sha256(data: bytes) -> str:
@@ -18,7 +19,7 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def check_metadata(data: bytes, project: dict) -> Message:
+def check_metadata(data: bytes, project: dict[str, Any]) -> Message:
     """Reject metadata that differs from the declared project requirements."""
     # Compare with project declarations, not with values read from the wheel itself
     metadata = BytesParser().parsebytes(data)
@@ -42,7 +43,7 @@ def check_metadata(data: bytes, project: dict) -> Message:
 
 
 def inspect_wheel(
-    path: Path, project: dict, sources: dict[str, bytes]
+    path: Path, project: dict[str, Any], sources: dict[str, bytes]
 ) -> dict[str, str]:
     """Check wheel contents and return hashes of its installed files."""
     # Read members without extracting an archive into the checkout
@@ -84,9 +85,9 @@ def bundle_wheels(bundle: Path) -> tuple[Path, Path]:
     return artifacts[0], artifacts[2]
 
 
-def verify(bundle: Path) -> dict:
+def verify(bundle: Path) -> dict[str, Any]:
     """Require a complete distribution bundle with matching file hashes."""
-    manifest = json.loads((bundle / "manifest.json").read_text())
+    manifest: dict[str, Any] = json.loads((bundle / "manifest.json").read_text())
     # Extra artifacts must fail too; publication must not pick up a stale wheel
     actual = {str(p.relative_to(bundle)) for p in bundle.rglob("*") if p.is_file()}
     if actual != set(manifest["files"]) | {"manifest.json"}:
@@ -104,15 +105,18 @@ def verify(bundle: Path) -> dict:
 
 
 def inspect_sdist(
-    sdist: Path, root: Path, project: dict, sources: dict[str, bytes]
+    sdist: Path, root: Path, project: dict[str, Any], sources: dict[str, bytes]
 ) -> None:
     """Check the source archive against the intended checkout files."""
     with tarfile.open(sdist) as archive:
-        members = {
-            m.name.split("/", 1)[1]: archive.extractfile(m).read()
-            for m in archive.getmembers()
-            if m.isfile()
-        }
+        members: dict[str, bytes] = {}
+        for m in archive.getmembers():
+            if not m.isfile():
+                continue
+            content = archive.extractfile(m)
+            if content is None:
+                raise ValueError(f"Cannot read sdist member: {m.name}")
+            members[m.name.split("/", 1)[1]] = content.read()
     # An allowlist catches nested checkouts and private development files
     expected = {"src/" + n: data for n, data in sources.items()}
     for name in (
