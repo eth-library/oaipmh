@@ -22,6 +22,10 @@ jobs:
         with:
           job-name: lint
 
+      - uses: ./.github/actions/setup-uv-cache
+        with:
+          python: default
+
       - name: Run pre-commit
         run: nix develop .#default --command pre-commit run --all-files --show-diff-on-failure
 

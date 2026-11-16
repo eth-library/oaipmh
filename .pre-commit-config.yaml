@@ -40,3 +40,10 @@ repos:
         language: system
         files: \.nix$
         pass_filenames: true
+      # Checks the whole project; --extra test because scripts/test_*.py import pytest
+      - id: mypy
+        name: mypy (strict)
+        entry: uv run --frozen --extra test --group typecheck mypy
+        language: system
+        pass_filenames: false
+        files: ^(src/oaipmh/.*\.py|scripts/.*\.py|pyproject\.toml|uv\.lock)$
