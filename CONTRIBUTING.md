@@ -104,7 +104,7 @@ distributions: build ──▶ install (same wheel per devShell)
 
 ### Jobs
 
-- **`lint`** (independent) — runs `pre-commit run --all-files` over the repository. Same Ruff and hygiene hooks that run on every local commit.
+- **`lint`** (independent) — runs `pre-commit run --all-files` over the repository. Same Ruff, mypy and hygiene hooks that run on every local commit.
 - **`matrix` → `test`** — `matrix` evaluates `nix eval --json .#lib.pythonShells` and exposes the devShell-name list as a job output; `test` depends on it (`needs: matrix`) and fans out one row per devShell with `fail-fast: false` so a regression on one row doesn't mask others. Adding or removing a Python version is a one-line edit to `pythonEntries` in `flake/python-axis.nix`; CI follows automatically.
 - **Publication validation** — `publish.yml` runs the distribution checks when a GitHub Release is published. Upload waits for every installation check, verifies the release tag and artifact checksums, and publishes the tested files without rebuilding.
 
@@ -135,7 +135,7 @@ Cache wiring lives under `.github/actions/` so each workflow job calls one compo
 
 ## Style
 
-The repository uses [Ruff](https://docs.astral.sh/ruff/) for linting, wired up via [pre-commit](https://pre-commit.com/) so the same checks run locally and in CI.
+The repository uses [Ruff](https://docs.astral.sh/ruff/) for linting and [mypy](https://mypy-lang.org/) for type checking, wired up via [pre-commit](https://pre-commit.com/) so the same checks run locally and in CI.
 
 If you use the Nix flake (Option A), pre-commit hooks are installed automatically when you enter the dev shell.
 
@@ -155,6 +155,24 @@ From then on, `git commit` runs Ruff (with `--fix`) and `ruff format` plus a sma
 
 ```bash
 pre-commit run --all-files
+```
+
+The `mypy` hook type-checks `src/oaipmh/` and `scripts/` in strict mode, using the `[tool.mypy]` settings in `pyproject.toml`. Test modules are checked too but need no annotations. The hook runs when a Python file in those directories, `pyproject.toml` or `uv.lock` changes, always checks the whole project, and requires `uv`. To run only the type check:
+
+```bash
+pre-commit run mypy --all-files
+```
+
+The hook runs this command, which you can also run directly:
+
+```bash
+uv run --frozen --extra test --group typecheck mypy
+```
+
+To give your editor the same mypy version and type stubs, install the `typecheck` dependency group into the project environment:
+
+```bash
+uv sync --frozen --extra test --group typecheck
 ```
 
 CI enforces the same hook set in the `lint` job of `.github/workflows/ci.yml`. Contributors who commit before running `pre-commit install` will see the failure surface in CI rather than locally.
