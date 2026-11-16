@@ -1,6 +1,11 @@
+from collections.abc import Callable
+
 from lxml import etree
 
 from oaipmh import common
+
+_Reader = Callable[[etree._Element], common.Metadata]
+_Writer = Callable[[etree._Element, common.Metadata], None]
 
 
 class MetadataRegistry:
@@ -13,23 +18,25 @@ class MetadataRegistry:
     produces a chunk of XML in the right format for this metadata.
     """
 
-    def __init__(self):
-        self._readers = {}
-        self._writers = {}
+    def __init__(self) -> None:
+        self._readers: dict[str, _Reader] = {}
+        self._writers: dict[str, _Writer] = {}
 
-    def registerReader(self, metadata_prefix, reader):
+    def registerReader(self, metadata_prefix: str, reader: _Reader) -> None:
         self._readers[metadata_prefix] = reader
 
-    def registerWriter(self, metadata_prefix, writer):
+    def registerWriter(self, metadata_prefix: str, writer: _Writer) -> None:
         self._writers[metadata_prefix] = writer
 
-    def hasReader(self, metadata_prefix):
+    def hasReader(self, metadata_prefix: str) -> bool:
         return metadata_prefix in self._readers
 
-    def hasWriter(self, metadata_prefix):
+    def hasWriter(self, metadata_prefix: str) -> bool:
         return metadata_prefix in self._writers
 
-    def readMetadata(self, metadata_prefix, element):
+    def readMetadata(
+        self, metadata_prefix: str, element: etree._Element
+    ) -> common.Metadata:
         """Turn XML into metadata object.
 
         element - element to read in
@@ -38,7 +45,9 @@ class MetadataRegistry:
         """
         return self._readers[metadata_prefix](element)
 
-    def writeMetadata(self, metadata_prefix, element, metadata):
+    def writeMetadata(
+        self, metadata_prefix: str, element: etree._Element, metadata: common.Metadata
+    ) -> None:
         """Write metadata as XML.
 
         element - ElementTree element to write under
@@ -57,18 +66,23 @@ class Error(Exception):
 class MetadataReader:
     """A default implementation of a reader based on fields."""
 
-    def __init__(self, fields, namespaces=None):
+    def __init__(
+        self,
+        fields: dict[str, tuple[str, str]],
+        namespaces: dict[str, str] | None = None,
+    ) -> None:
         self._fields = fields
         self._namespaces = namespaces or {}
 
-    def __call__(self, element):
-        map = {}
+    def __call__(self, element: etree._Element) -> common.Metadata:
+        map: dict[str, str | list[str]] = {}
         # create XPathEvaluator for this element
         xpath_evaluator = etree.XPathEvaluator(element, namespaces=self._namespaces)
 
         e = xpath_evaluator
         # now extra field info according to xpath expr
         for field_name, (field_type, expr) in list(self._fields.items()):
+            value: str | list[str]
             if field_type == "bytes":
                 value = str(e(expr))
             elif field_type == "bytesList":
