@@ -1,8 +1,20 @@
+import datetime
+from collections.abc import Callable
 from importlib.metadata import version as _get_version
+from typing import Any
+
+from lxml import etree
 
 
 class Header:
-    def __init__(self, element, identifier, datestamp, setspec, deleted):
+    def __init__(
+        self,
+        element: etree._Element | None,
+        identifier: object,
+        datestamp: datetime.datetime,
+        setspec: list[str],
+        deleted: bool,
+    ) -> None:
         self._element = element
         # force identifier to be a string, it might be
         # an lxml.etree._ElementStringResult...
@@ -11,34 +23,34 @@ class Header:
         self._setspec = setspec
         self._deleted = deleted
 
-    def element(self):
+    def element(self) -> etree._Element | None:
         return self._element
 
-    def identifier(self):
+    def identifier(self) -> str:
         return self._identifier
 
-    def datestamp(self):
+    def datestamp(self) -> datetime.datetime:
         return self._datestamp
 
-    def setSpec(self):
+    def setSpec(self) -> list[str]:
         return self._setspec
 
-    def isDeleted(self):
+    def isDeleted(self) -> bool:
         return self._deleted
 
 
 class Metadata:
-    def __init__(self, element, map):
+    def __init__(self, element: etree._Element | None, map: dict[str, Any]) -> None:
         self._element = element
         self._map = map
 
-    def element(self):
+    def element(self) -> etree._Element | None:
         return self._element
 
-    def getMap(self):
+    def getMap(self) -> dict[str, Any]:
         return self._map
 
-    def getField(self, name):
+    def getField(self, name: str) -> Any:
         return self._map[name]
 
     __getitem__ = getField
@@ -47,16 +59,16 @@ class Metadata:
 class Identify:
     def __init__(
         self,
-        repositoryName,
-        baseURL,
-        protocolVersion,
-        adminEmails,
-        earliestDatestamp,
-        deletedRecord,
-        granularity,
-        compression,
-        toolkit_description=True,
-    ):
+        repositoryName: str,
+        baseURL: str,
+        protocolVersion: str,
+        adminEmails: list[str],
+        earliestDatestamp: datetime.datetime,
+        deletedRecord: str,
+        granularity: str,
+        compression: list[str],
+        toolkit_description: bool = True,
+    ) -> None:
         self._repositoryName = repositoryName
         self._baseURL = baseURL
         self._protocolVersion = protocolVersion
@@ -65,7 +77,7 @@ class Identify:
         self._deletedRecord = deletedRecord
         self._granularity = granularity
         self._compression = compression
-        self._descriptions = []
+        self._descriptions: list[str] = []
 
         if toolkit_description:
             try:
@@ -84,55 +96,55 @@ class Identify:
                 "</toolkit>"
             )
 
-    def repositoryName(self):
+    def repositoryName(self) -> str:
         return self._repositoryName
 
-    def baseURL(self):
+    def baseURL(self) -> str:
         return self._baseURL
 
-    def protocolVersion(self):
+    def protocolVersion(self) -> str:
         return self._protocolVersion
 
-    def adminEmails(self):
+    def adminEmails(self) -> list[str]:
         return self._adminEmails
 
-    def earliestDatestamp(self):
+    def earliestDatestamp(self) -> datetime.datetime:
         return self._earliestDatestamp
 
-    def deletedRecord(self):
+    def deletedRecord(self) -> str:
         return self._deletedRecord
 
-    def granularity(self):
+    def granularity(self) -> str:
         return self._granularity
 
-    def compression(self):
+    def compression(self) -> list[str]:
         return self._compression
 
-    def add_description(self, xml_string):
+    def add_description(self, xml_string: str) -> None:
         self._descriptions.append(xml_string)
 
-    def descriptions(self):
+    def descriptions(self) -> list[str]:
         return self._descriptions
 
 
-def ResumptionTokenSpec(dict):
+def ResumptionTokenSpec(dict: dict[str, str]) -> dict[str, str]:
     dict = dict.copy()
     dict["resumptionToken"] = "exclusive"
     return dict
 
 
 class OAIMethodImpl:
-    def __init__(self, verb):
+    def __init__(self, verb: str) -> None:
         self._verb = verb
 
-    def __call__(self, bound_self, **kw):
+    def __call__(self, bound_self: "OAIPMH | ResumptionOAIPMH", **kw: Any) -> Any:
         return bound_self.handleVerb(self._verb, kw)
 
 
-def OAIMethod(verb):
+def OAIMethod(verb: str) -> Callable[..., Any]:
     obj = OAIMethodImpl(verb)
 
-    def method(self, **kw):
+    def method(self: "OAIPMH | ResumptionOAIPMH", **kw: Any) -> Any:
         return obj(self, **kw)
 
     return method
@@ -147,7 +159,7 @@ class OAIPMH:
     overridden in a subclass.
     """
 
-    def handleVerb(self, verb, kw):
+    def handleVerb(self, verb: str, kw: dict[str, Any]) -> Any:
         raise NotImplementedError
 
     getRecord = OAIMethod(
@@ -190,7 +202,7 @@ class ResumptionOAIPMH:
     returned is None, this indicates the end of the list is reached.
     """
 
-    def handleVerb(self, verb, kw):
+    def handleVerb(self, verb: str, kw: dict[str, Any]) -> Any:
         raise NotImplementedError
 
     getRecord = OAIMethod(
@@ -222,5 +234,6 @@ class ResumptionOAIPMH:
     )
 
 
-def getMethodForVerb(server, verb):
-    return getattr(server, verb[0].lower() + verb[1:])
+def getMethodForVerb(server: Any, verb: str) -> Callable[..., Any]:
+    method: Callable[..., Any] = getattr(server, verb[0].lower() + verb[1:])
+    return method
