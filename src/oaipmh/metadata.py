@@ -56,7 +56,7 @@ class MetadataRegistry:
         self._writers[metadata_prefix](element, metadata)
 
 
-global_metadata_registry = MetadataRegistry()
+global_metadata_registry: MetadataRegistry = MetadataRegistry()
 
 
 class Error(Exception):
@@ -101,7 +101,7 @@ class MetadataReader:
         return common.Metadata(element, map)
 
 
-oai_dc_reader = MetadataReader(
+oai_dc_reader: MetadataReader = MetadataReader(
     fields={
         "title": ("textList", "oai_dc:dc/dc:title/text()"),
         "creator": ("textList", "oai_dc:dc/dc:creator/text()"),
