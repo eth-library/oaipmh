@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Add `self` to the interface methods in `oaipmh.interfaces`. Methods a subclass does not override now consistently raise `NotImplementedError`. Previously, these calls could raise `TypeError` or return `None`.
+
 ### Fixed
 
 - Raise a `ValueError` naming the record when a server backend returns a record that is not deleted but has no metadata, instead of failing with an `AttributeError` inside the metadata writer.

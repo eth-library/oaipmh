@@ -8,6 +8,7 @@ from email.parser import Parser
 from importlib.metadata import Distribution, distribution, distributions
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 from lxml import etree
 
@@ -15,7 +16,7 @@ from oaipmh import client, metadata, server
 from oaipmh.datestamp import datestamp_to_datetime
 
 
-def check_installation(manifest: dict, shell: str) -> Distribution:
+def check_installation(manifest: dict[str, Any], shell: str) -> Distribution:
     """Check interpreter identity, installed metadata, and package file hashes."""
     project = manifest["project"]
     if sys.version_info[:2] != (int(shell[2]), int(shell[3:])):
@@ -34,16 +35,21 @@ def check_installation(manifest: dict, shell: str) -> Distribution:
         raise ValueError(
             "Installed Python requirement differs from project declaration"
         )
-    if sorted(dist.metadata.get_all("Classifier")) != sorted(project["classifiers"]):
+    # A missing Classifier header means no classifiers
+    classifiers = dist.metadata.get_all("Classifier", [])
+    if sorted(classifiers) != sorted(project["classifiers"]):
         raise ValueError("Metadata classifiers differ from project declarations")
-    wheel = Parser().parsestr(dist.read_text("WHEEL"))
+    wheel_text = dist.read_text("WHEEL")
+    if wheel_text is None:
+        raise ValueError("Installed distribution has no WHEEL file")
+    wheel = Parser().parsestr(wheel_text)
     if wheel.get_all("Tag") != ["py3-none-any"]:
         raise ValueError("Wheel must be platform-independent Python 3")
     if wheel["Root-Is-Purelib"] != "true":
         raise ValueError("Wheel must use purelib")
     # Verify installed payload bytes as well as the distribution’s declared version
     for name, digest in manifest["wheel_files"].items():
-        installed = Path(dist.locate_file(name)).resolve()
+        installed = Path(str(dist.locate_file(name))).resolve()
         if not installed.is_relative_to(prefix):
             raise ValueError(installed)
         if hashlib.sha256(installed.read_bytes()).hexdigest() != digest:
@@ -55,6 +61,8 @@ def check_behavior() -> None:
     """Exercise deterministic public operations without network access."""
     # Include the compiled dependency in the import-provenance check
     for module in (client, metadata, server, etree):
+        if module.__file__ is None:
+            raise ValueError(f"{module.__name__} has no file location")
         location = Path(module.__file__).resolve()
         if not location.is_relative_to(Path(sys.prefix).resolve()):
             raise ValueError(location)

@@ -42,7 +42,7 @@ class GranularityFakeClient(client.BaseClient):
             datetime(2005, 1, 1),
             "no",
             self._granularity,
-            None,
+            ["identity"],
         )
 
 

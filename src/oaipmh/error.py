@@ -1,10 +1,12 @@
 import urllib.error
 from datetime import datetime, timezone
+from email.message import Message
 from email.utils import parsedate_to_datetime
+from typing import IO
 
 
 class ErrorBase(Exception):
-    def oainame(self):
+    def oainame(self) -> str:
         name = self.__class__.__name__
         # strip off 'Error' part
         name = name[:-5]
@@ -52,7 +54,7 @@ class UnknownError(ErrorBase):
 # errors not defined by OAI-PMH but which can occur in a client when
 # the server is somehow misbehaving
 class ClientError(Exception):
-    def details(self):
+    def details(self) -> str:
         """Error details in human readable text."""
         raise NotImplementedError
 
@@ -60,7 +62,7 @@ class ClientError(Exception):
 class XMLSyntaxError(ClientError):
     """The OAI-PMH XML can not be parsed as it is not well-formed."""
 
-    def details(self):
+    def details(self) -> str:
         return (
             "The data delivered by the server could not be parsed, as it "
             "is not well-formed XML."
@@ -70,21 +72,23 @@ class XMLSyntaxError(ClientError):
 class DatestampError(ClientError):
     """The OAI-PMH datestamps were not proper UTC datestamps as by spec."""
 
-    def __init__(self, datestamp):
+    def __init__(self, datestamp: str) -> None:
         self.datestamp = datestamp
 
-    def details(self):
+    def details(self) -> str:
         return f"An illegal datestamp was encountered: {self.datestamp}"
 
 
 class NetworkError(ClientError):
     """A transport-level failure (DNS, connection refused, timeout)."""
 
-    def __init__(self, message, url_error=None):
+    def __init__(
+        self, message: str, url_error: urllib.error.URLError | None = None
+    ) -> None:
         self.url_error = url_error
         super().__init__(message)
 
-    def details(self):
+    def details(self) -> str:
         return f"Network error: {self}"
 
 
@@ -97,7 +101,9 @@ class NetworkError(ClientError):
 # ---------------------------------------------------------------------------
 
 
-def _parse_retry_after(headers):
+def _parse_retry_after(
+    headers: Message | None,
+) -> tuple[int | None, datetime | None, str | None]:
     """Return (seconds: int | None, http_date: datetime | None, raw: str | None).
 
     *headers* is an ``http.client.HTTPMessage`` (or compatible mapping).
@@ -139,7 +145,9 @@ class HTTPRetryAfterError(urllib.error.HTTPError):
     Subclasses: ``RateLimitedError`` (429), ``ServiceUnavailableError`` (503).
     """
 
-    def __init__(self, url, code, msg, hdrs, fp):
+    def __init__(
+        self, url: str, code: int, msg: str, hdrs: Message, fp: IO[bytes] | None
+    ) -> None:
         super().__init__(url, code, msg, hdrs, fp)
         seconds, http_date, raw = _parse_retry_after(self.headers)
         self.retry_after_seconds = seconds

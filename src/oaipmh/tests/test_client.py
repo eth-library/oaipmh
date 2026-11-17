@@ -1,6 +1,8 @@
 import os
 import urllib.request as urllib2
 from datetime import datetime
+from http.client import HTTPMessage
+from io import BytesIO
 from unittest import TestCase, mock
 
 from .fakeclient import FakeClient, FakeRequestError, GranularityFakeClient
@@ -17,7 +19,7 @@ fakeclient.getMetadataRegistry().registerReader("oai_dc", metadata.oai_dc_reader
 
 
 def http_error(code):
-    return urllib2.HTTPError("mock-url", code, "error", {}, None)
+    return urllib2.HTTPError("mock-url", code, "error", HTTPMessage(), None)
 
 
 class ClientTestCase(TestCase):
@@ -205,12 +207,13 @@ class ClientTestCase(TestCase):
 
         redirected_request = urllib2.HTTPRedirectHandler().redirect_request(
             request,
-            None,
+            BytesIO(),
             302,
             "Found",
-            {},
+            HTTPMessage(),
             "https://redirected.example/oai",
         )
+        assert redirected_request is not None
         self.assertIsNone(redirected_request.get_header("Authorization"))
 
     @mock.patch("oaipmh.client.retrieveFromUrlWaiting", return_value=b"response")

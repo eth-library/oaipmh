@@ -2,6 +2,7 @@ import urllib.error
 import urllib.request as urllib2
 import warnings
 from datetime import datetime, timedelta, timezone
+from http.client import HTTPMessage
 from unittest import TestCase, mock
 
 from oaipmh import client, error
@@ -9,12 +10,20 @@ from oaipmh import client, error
 URLOPEN_PATH = "urllib.request.urlopen"
 
 
+def message(headers=None):
+    """Build the header object that urllib passes to HTTPError."""
+    result = HTTPMessage()
+    for name, value in (headers or {}).items():
+        result[name] = value
+    return result
+
+
 def http_error(code, headers=None):
     return urllib2.HTTPError(
         "mock-url",
         code,
         "error",
-        headers or {},
+        message(headers),
         None,
     )
 
@@ -26,7 +35,7 @@ def retry_after_exc(value):
         "http://x",
         503,
         "Unavailable",
-        hdrs,
+        message(hdrs),
         None,
     )
 
@@ -81,7 +90,7 @@ class RetryAfterParsingTestCase(TestCase):
             "http://example.com",
             429,
             "Too Many Requests",
-            hdrs,
+            message(hdrs),
             None,
         )
         self.assertEqual(exc.code, 429)
@@ -94,7 +103,7 @@ class RetryAfterParsingTestCase(TestCase):
             "http://x",
             429,
             "Too Many Requests",
-            {},
+            message(),
             None,
         )
         self.assertIsInstance(exc, urllib.error.HTTPError)
@@ -105,7 +114,7 @@ class RetryAfterParsingTestCase(TestCase):
             "http://x",
             503,
             "Unavailable",
-            {},
+            message(),
             None,
         )
         self.assertIsInstance(exc, urllib.error.HTTPError)

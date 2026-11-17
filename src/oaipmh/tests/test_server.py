@@ -86,8 +86,7 @@ class XMLTreeServerTestCase(unittest.TestCase):
         )
         # ugly xml manipulation, this is probably why the requirement is in
         # the spec (yuck!)
-        xml = etree.tostring(tree)
-        xml = xml.decode("utf-8")
+        xml = etree.tostring(tree).decode("utf-8")
         xml = xml.split("<metadata>")[-1].split("</metadata>")[0]
         first_el = xml.split(">")[0]
         self.assertTrue(first_el.startswith("<oai_dc:dc"))

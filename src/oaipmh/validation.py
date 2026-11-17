@@ -1,9 +1,12 @@
 #
+from collections.abc import Mapping
+
+
 class BadArgumentError(Exception):
     pass
 
 
-def validate(argspec, dictionary):
+def validate(argspec: Mapping[str, str], dictionary: Mapping[str, object]) -> None:
     exclusive = None
     for arg_name, arg_type in list(argspec.items()):
         if arg_type == "exclusive":
@@ -29,32 +32,35 @@ def validate(argspec, dictionary):
 
 
 class ValidationSpec:
-    GetRecord = {"identifier": "required", "metadataPrefix": "required"}
-    GetMetadata = {"identifier": "required", "metadataPrefix": "required"}
+    GetRecord: dict[str, str] = {"identifier": "required", "metadataPrefix": "required"}
+    GetMetadata: dict[str, str] = {
+        "identifier": "required",
+        "metadataPrefix": "required",
+    }
 
-    Identify = {}
+    Identify: dict[str, str] = {}
 
-    ListIdentifiers = {
+    ListIdentifiers: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "metadataPrefix": "required",
         "set": "optional",
     }
 
-    ListMetadataFormats = {"identifier": "optional"}
+    ListMetadataFormats: dict[str, str] = {"identifier": "optional"}
 
-    ListRecords = {
+    ListRecords: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "set": "optional",
         "metadataPrefix": "required",
     }
 
-    ListSets = {}
+    ListSets: dict[str, str] = {}
 
 
 class ResumptionValidationSpec(ValidationSpec):
-    ListIdentifiers = {
+    ListIdentifiers: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "metadataPrefix": "required",
@@ -62,7 +68,7 @@ class ResumptionValidationSpec(ValidationSpec):
         "resumptionToken": "exclusive",
     }
 
-    ListRecords = {
+    ListRecords: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "set": "optional",
@@ -70,14 +76,14 @@ class ResumptionValidationSpec(ValidationSpec):
         "resumptionToken": "exclusive",
     }
 
-    ListSets = {
+    ListSets: dict[str, str] = {
         "resumptionToken": "exclusive",
     }
 
 
-def validateArguments(verb, kw):
+def validateArguments(verb: str, kw: Mapping[str, object]) -> None:
     validate(getattr(ValidationSpec, verb), kw)
 
 
-def validateResumptionArguments(verb, kw):
+def validateResumptionArguments(verb: str, kw: Mapping[str, object]) -> None:
     validate(getattr(ResumptionValidationSpec, verb), kw)
