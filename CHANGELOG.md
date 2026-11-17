@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Raise a `ValueError` naming the record when a server backend returns a record that is not deleted but has no metadata, instead of failing with an `AttributeError` inside the metadata writer.
+
 ## [4.0.0] — 2026-10-12
 
 Require Python 3.11 or newer and add Python 3.15 support. Projects using Python 3.10 must upgrade Python before adopting this release.

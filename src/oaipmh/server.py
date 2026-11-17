@@ -45,7 +45,9 @@ class XMLTreeServer:
         e_record = SubElement(e_getRecord, nsoai("record"))
         self._outputHeader(e_record, header)
         if not header.isDeleted():
-            self._outputMetadata(e_record, kw["metadataPrefix"], metadata)
+            self._outputMetadata(
+                e_record, kw["metadataPrefix"], metadata, header.identifier()
+            )
         return envelope
 
     def getMetadata(self, **kw):
@@ -129,7 +131,9 @@ class XMLTreeServer:
                 e_record = SubElement(e_listRecords, nsoai("record"))
                 self._outputHeader(e_record, header)
                 if not header.isDeleted():
-                    self._outputMetadata(e_record, metadataPrefix, record_metadata)
+                    self._outputMetadata(
+                        e_record, metadataPrefix, record_metadata, header.identifier()
+                    )
                 # XXX about
 
         self._outputResuming(e_listRecords, self._server.listRecords, outputFunc, kw)
@@ -231,12 +235,15 @@ class XMLTreeServer:
             e = SubElement(e_header, nsoai("setSpec"))
             e.text = set
 
-    def _outputMetadata(self, element, metadata_prefix, metadata):
+    def _outputMetadata(self, element, metadata_prefix, metadata, identifier):
         e_metadata = SubElement(element, nsoai("metadata"))
         if not self._metadata_registry.hasWriter(metadata_prefix):
             raise error.CannotDisseminateFormatError(
                 f"Unknown metadata format: {metadata_prefix}"
             )
+        # OAI-PMH requires metadata for every record that is not deleted
+        if metadata is None:
+            raise ValueError(f"Record {identifier} is not deleted but has no metadata")
         self._metadata_registry.writeMetadata(metadata_prefix, e_metadata, metadata)
 
 
