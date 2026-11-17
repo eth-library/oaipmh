@@ -162,31 +162,31 @@ class OAIPMH:
     def handleVerb(self, verb: str, kw: dict[str, Any]) -> Any:
         raise NotImplementedError
 
-    getRecord = OAIMethod(
+    getRecord: Callable[..., Any] = OAIMethod(
         "GetRecord",
     )
 
-    getMetadata = OAIMethod(
+    getMetadata: Callable[..., Any] = OAIMethod(
         "GetMetadata",
     )
 
-    identify = OAIMethod(
+    identify: Callable[..., Any] = OAIMethod(
         "Identify",
     )
 
-    listIdentifiers = OAIMethod(
+    listIdentifiers: Callable[..., Any] = OAIMethod(
         "ListIdentifiers",
     )
 
-    listMetadataFormats = OAIMethod(
+    listMetadataFormats: Callable[..., Any] = OAIMethod(
         "ListMetadataFormats",
     )
 
-    listRecords = OAIMethod(
+    listRecords: Callable[..., Any] = OAIMethod(
         "ListRecords",
     )
 
-    listSets = OAIMethod(
+    listSets: Callable[..., Any] = OAIMethod(
         "ListSets",
     )
 
@@ -205,31 +205,31 @@ class ResumptionOAIPMH:
     def handleVerb(self, verb: str, kw: dict[str, Any]) -> Any:
         raise NotImplementedError
 
-    getRecord = OAIMethod(
+    getRecord: Callable[..., Any] = OAIMethod(
         "GetRecord",
     )
 
-    getMetadata = OAIMethod(
+    getMetadata: Callable[..., Any] = OAIMethod(
         "GetMetadata",
     )
 
-    identify = OAIMethod(
+    identify: Callable[..., Any] = OAIMethod(
         "Identify",
     )
 
-    listIdentifiers = OAIMethod(
+    listIdentifiers: Callable[..., Any] = OAIMethod(
         "ListIdentifiers",
     )
 
-    listMetadataFormats = OAIMethod(
+    listMetadataFormats: Callable[..., Any] = OAIMethod(
         "ListMetadataFormats",
     )
 
-    listRecords = OAIMethod(
+    listRecords: Callable[..., Any] = OAIMethod(
         "ListRecords",
     )
 
-    listSets = OAIMethod(
+    listSets: Callable[..., Any] = OAIMethod(
         "ListSets",
     )
 
