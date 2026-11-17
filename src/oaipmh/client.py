@@ -76,7 +76,7 @@ class BaseClient(common.OAIPMH):
         self._metadata_registry = metadata_registry or metadata.global_metadata_registry
         self._ignore_bad_character_hack: bool | int = 0
         self._day_granularity = False
-        self.retry_policy = self.default_retry_policy.copy()
+        self.retry_policy: _RetryPolicy = self.default_retry_policy.copy()
         if custom_retry_policy is not None:
             self.retry_policy.update(custom_retry_policy)
             if "expected-errcodes" in custom_retry_policy:
