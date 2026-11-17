@@ -32,21 +32,24 @@ def validate(argspec: Mapping[str, str], dictionary: Mapping[str, object]) -> No
 
 
 class ValidationSpec:
-    GetRecord = {"identifier": "required", "metadataPrefix": "required"}
-    GetMetadata = {"identifier": "required", "metadataPrefix": "required"}
+    GetRecord: dict[str, str] = {"identifier": "required", "metadataPrefix": "required"}
+    GetMetadata: dict[str, str] = {
+        "identifier": "required",
+        "metadataPrefix": "required",
+    }
 
     Identify: dict[str, str] = {}
 
-    ListIdentifiers = {
+    ListIdentifiers: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "metadataPrefix": "required",
         "set": "optional",
     }
 
-    ListMetadataFormats = {"identifier": "optional"}
+    ListMetadataFormats: dict[str, str] = {"identifier": "optional"}
 
-    ListRecords = {
+    ListRecords: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "set": "optional",
@@ -57,7 +60,7 @@ class ValidationSpec:
 
 
 class ResumptionValidationSpec(ValidationSpec):
-    ListIdentifiers = {
+    ListIdentifiers: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "metadataPrefix": "required",
@@ -65,7 +68,7 @@ class ResumptionValidationSpec(ValidationSpec):
         "resumptionToken": "exclusive",
     }
 
-    ListRecords = {
+    ListRecords: dict[str, str] = {
         "from_": "optional",
         "until": "optional",
         "set": "optional",
@@ -73,7 +76,7 @@ class ResumptionValidationSpec(ValidationSpec):
         "resumptionToken": "exclusive",
     }
 
-    ListSets = {
+    ListSets: dict[str, str] = {
         "resumptionToken": "exclusive",
     }
 
